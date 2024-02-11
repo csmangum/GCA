@@ -1,25 +1,27 @@
-""""
-Rule 30 specifies that a cell becomes 1 (or "alive") in the next generation if 
-    exactly one of the three cells (itself and its two neighbors) was 1 in the 
-    previous generation, except for the case where only the cell itself was 1.
-
-We use a one-dimensional array to represent the cells, where 0 indicates a dead 
-    cell and 1 indicates a live cell.
-
-The new state of each cell depends on its current state and the states of its 
-    left and right neighbors.
-"""
-
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
-
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
-import torch.nn as nn
 
 
-def apply_ca_rule(cells, rule_number):
+def apply_ca_rule(cells: np.ndarray, rule_number: int) -> np.ndarray:
+    """
+    Apply a 1D cellular automaton rule to a row of cells.
+
+    Parameters
+    ----------
+    cells : np.ndarray
+        A 1D NumPy array of binary cell states (0 or 1).
+    rule_number : int
+        An integer between 0 and 255 representing the CA rule.
+
+    Returns
+    -------
+    np.ndarray
+        A new array of cell states after applying the rule.
+
+    Example
+    -------
+    >>> apply_ca_rule(np.array([1, 0, 1]), 90)
+    array([0, 1, 0])
+    """
     rule_binary = f"{rule_number:08b}"
     next_gen = []
     for i in range(len(cells)):
@@ -32,169 +34,28 @@ def apply_ca_rule(cells, rule_number):
     return next_gen
 
 
-def generate_automata(rule_number, initial_state, num_generations):
+def generate_automata(
+    rule_number: int, initial_state: np.ndarray, num_generations: int
+) -> np.ndarray:
+    """
+    Generate a 2D array of cell states for a 1D cellular automaton.
+
+    Parameters
+    ----------
+    rule_number : int
+        An integer between 0 and 255 representing the CA rule.
+    initial_state : np.ndarray
+        A 1D NumPy array of binary cell states (0 or 1).
+    num_generations : int
+        The number of rows of cells to generate.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D NumPy array of cell states with shape (num_generations, initial_state.size).
+    """
     generations = [initial_state]
     for _ in range(num_generations - 1):
         next_gen = apply_ca_rule(generations[-1], rule_number)
         generations.append(next_gen)
     return np.array(generations)
-
-
-# Parameters
-rule_number = 73  # Rule number
-num_cells = 101  # Number of cells in a row
-num_generations = 100  # Number of generations
-initial_state = [0] * num_cells  # Initialize with all zeros
-initial_state[num_cells // 2] = 1  # Set the middle cell to 1
-
-# Generate the cellular automata
-automata = generate_automata(rule_number, initial_state, num_generations)
-
-# Visualize the cellular automata
-plt.figure(figsize=(10, 10))
-plt.imshow(automata, cmap="binary", interpolation="nearest")
-plt.title(f"Cellular Automata Rule {rule_number}")
-plt.axis("off")
-plt.show()
-
-
-# Generate training data
-def generate_data(size=10000, length=15):
-    data = []
-    labels = []
-    for _ in range(size):
-        current_gen = np.random.randint(2, size=length)
-        next_gen = apply_ca_rule(current_gen, rule_number)
-        data.append(current_gen)
-        labels.append(next_gen)
-    return torch.tensor(data, dtype=torch.float32), torch.tensor(
-        labels, dtype=torch.float32
-    )
-
-
-# Define a simple 1D CNN model
-class Rule30CNN(nn.Module):
-    def __init__(self):
-        super(Rule30CNN, self).__init__()
-        self.conv1 = nn.Conv1d(1, 10, kernel_size=3, padding=1)
-        self.fc1 = nn.Linear(10 * length, length)
-
-    def forward(self, x):
-        x = torch.relu(self.conv1(x))
-        x = x.view(-1, 10 * length)
-        x = torch.sigmoid(self.fc1(x))
-        return x
-
-
-def plot(model, test_data, test_labels, criterion, epoch):
-    with torch.no_grad():
-        test_output = model(test_data)
-        test_loss = criterion(test_output, test_labels)
-
-    # Visualize the model's predictions
-    plt.figure(figsize=(10, 10))
-    plt.suptitle(f"Epoch: {epoch}, Test Loss: {test_loss.item()}")
-    plt.subplot(1, 2, 1)
-    plt.imshow(test_labels[:25].numpy(), cmap="binary", interpolation="nearest")
-    plt.title("True")
-    plt.axis("off")
-    plt.subplot(1, 2, 2)
-    plt.imshow(test_output[:25].numpy(), cmap="binary", interpolation="nearest")
-    plt.title("Predicted")
-    plt.axis("off")
-
-    plt.savefig(f"rule30_epoch_{epoch}.png")
-
-
-# Prepare the data
-length = 101
-data, labels = generate_data(length=length)
-data = data.view(-1, 1, length)
-labels = labels.view(-1, length)
-split = int(0.8 * len(data))
-train_data, test_data = data[:split], data[split:]
-train_labels, test_labels = labels[:split], labels[split:]
-
-# Initialize the model, loss function, and optimizer
-model = Rule30CNN()
-criterion = nn.BCELoss()  # Binary Cross Entropy Loss for binary classification
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-# Training loop
-epochs = 1000
-for epoch in range(epochs):
-    optimizer.zero_grad()
-    output = model(train_data)
-    loss = criterion(output, train_labels)
-    loss.backward()
-    optimizer.step()
-    if epoch % 10 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.item()}")
-
-    # if epoch % 100 == 0:
-    #     plot(model, test_data, test_labels, criterion, epoch)
-
-
-# Evaluation
-# with torch.no_grad():
-#     test_output = model(test_data)
-#     test_loss = criterion(test_output, test_labels)
-#     print(f"Test Loss: {test_loss.item()}")
-
-# # Visualize the model's predictions
-# plt.figure(figsize=(10, 10))
-# plt.subplot(1, 2, 1)
-# plt.imshow(test_labels[:25].numpy(), cmap="binary", interpolation="nearest")
-# plt.title("True")
-# plt.axis("off")
-# plt.subplot(1, 2, 2)
-# plt.imshow(test_output[:25].numpy(), cmap="binary", interpolation="nearest")
-# plt.title("Predicted")
-# plt.axis("off")
-# plt.show()
-
-
-import os
-
-# make gif
-import imageio
-
-# images = []
-
-# matching_files = [
-#     f for f in os.listdir(".") if f.startswith("rule30_epoch") and f.endswith(".png")
-# ]
-# matching_files.sort(key=lambda x: int(x.split("_")[2].split(".")[0]))
-# for filename in matching_files:
-#     images.append(imageio.imread(filename))
-# imageio.mimsave("rule30_training.gif", images, duration=0.5)
-# for filename in os.listdir("."):
-#     if filename.endswith(".png"):
-#         os.remove(filename)
-
-
-
-
-
-def predict_and_visualize(model, initial_state, num_generations=100):
-    current_state = torch.tensor(initial_state, dtype=torch.float32).view(1, 1, -1)
-    predictions = [current_state.view(-1).numpy()]
-    
-    with torch.no_grad():
-        for _ in range(num_generations - 1):
-            output = model(current_state)
-            current_state = (output > 0.5).float()  # Binarize the output
-            predictions.append(current_state.view(-1).numpy())
-    
-    plt.figure(figsize=(10, 10))
-    plt.imshow(predictions, cmap="binary", interpolation="nearest")
-    plt.title("Predicted Rule 30 Cellular Automaton")
-    plt.axis("off")
-    plt.show()
-
-# Prepare a new initial state
-new_initial_state = [0] * num_cells  # Initialize with all zeros
-new_initial_state[num_cells // 2] = 1  # Set the middle cell to 1
-
-# Predict and visualize
-predict_and_visualize(model, new_initial_state, num_generations=100)
