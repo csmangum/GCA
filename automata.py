@@ -111,12 +111,14 @@ class Automata:
         """
         Compare two arrays and return the percentage of matches.
 
+        Used to compare the actual automata vs the generated automata.
+
         Parameters
         ----------
         a : array_like
-            The first array.
+            The first array of cell states.
         b : array_like
-            The second array.
+            The second array of cell states.
 
         Returns
         -------
