@@ -42,8 +42,8 @@ class Automata:
             The number of cells in each row of the cellular automaton.
         """
         self.rule_number = rule_number
-        self.initial_state = self._initial_state()
         self.num_cells = num_cells
+        self.initial_state = self._initial_state()
 
     def _initial_state(self) -> np.ndarray:
         """
@@ -98,10 +98,11 @@ class Automata:
         np.ndarray
             A 2D NumPy array of cell states with shape (num_generations, initial_state.size).
         """
+
         self.num_generations = num_generations
         cells = self.initial_state
         history = [cells]
-        for _ in range(self.num_generations):
+        for _ in range(self.num_generations - 1):
             cells = self.apply_rule(cells)
             history.append(cells)
         return np.array(history)
@@ -137,6 +138,6 @@ class Automata:
             # Calculate the percentage of matches
             match_percentage = (matches.sum() / a.size) * 100
         else:
-            match_percentage = None
+            match_percentage = 0.0
 
         return match_percentage
