@@ -60,7 +60,7 @@ class Learn:
         self.loss = 0
 
     def generate_data(
-        self, num_records: int = 10000
+        self, num_records: int = 50000
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Generate training data for a 1D cellular automaton.
@@ -91,11 +91,12 @@ class Learn:
             # Generate the next state
             next_state = automata.apply_rule(initial_state)
 
-            # Convert the initial state and next state to PyTorch tensors
-            data.append(torch.tensor(initial_state, dtype=torch.float32))
-            labels.append(torch.tensor(next_state, dtype=torch.float32))
+            data.append(initial_state)
+            labels.append(next_state)
 
-        return torch.stack(data), torch.stack(labels)
+        return torch.tensor(data, dtype=torch.float32), torch.tensor(
+            labels, dtype=torch.float32
+        )
 
     def prepare_data(
         self,
@@ -156,7 +157,7 @@ class Learn:
 
         return match
 
-    def train(self, epochs: int = 100) -> None:
+    def train(self, epochs: int = 2000) -> None:
         """
         Train a model to predict the next state of a 1D cellular automaton.
 
