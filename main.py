@@ -7,7 +7,7 @@ from learn import Learn
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-rule_number = 35
+rule_number = 30
 path = f"results/rule_{rule_number}/"
 
 
@@ -25,10 +25,13 @@ def plot_automata(rule_number, automata, path):
     plt.title(f"Real Cellular Automata Rule {rule_number}")
     plt.axis("off")
     plt.savefig(path + f"real_automata_{rule_number}.png")
-
-
-learn = Learn(rule_number)
-real_automata = learn.automata.generate(100)
-make_dir(path)
-plot_automata(rule_number, real_automata, path)
-learn.train()
+    plt.close()
+    
+for i in range(35,256):
+    rule_number = i
+    path = f"results/rule_{rule_number}/"
+    make_dir(path)
+    learn = Learn(rule_number)
+    real_automata = learn.automata.generate(100)
+    plot_automata(rule_number, real_automata, path)
+    learn.train(path=path)
