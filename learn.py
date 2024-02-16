@@ -2,10 +2,20 @@ from typing import Tuple
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 from torch import nn
 
 from automata import Automata
 from model import Rule30CNN
+
+
+def plot_automata(rule_number, automata, path, epoch):
+    plt.figure(figsize=(10, 10))
+    plt.imshow(automata, cmap="binary", interpolation="nearest")
+    plt.title(f"Generated Cellular Automata Rule {rule_number}")
+    plt.axis("off")
+    plt.savefig(path + f"generated_automata_{epoch}.png")
+    plt.close()
 
 
 class Learn:
@@ -125,7 +135,7 @@ class Learn:
 
         return train_data, test_data, train_labels, test_labels
 
-    def early_stopping(self, actual_automata: "Automata") -> float:
+    def early_stopping(self, actual_automata: "Automata", path: str) -> float:
         """
         Perform early stopping based on the accuracy of the model to the actual
         cellular automaton.
@@ -155,9 +165,11 @@ class Learn:
 
         match = Automata.compare(actual_automata, predictions)
 
+        plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
+
         return match
 
-    def train(self, epochs: int = 2000) -> None:
+    def train(self, epochs: int = 2000, path: str = None):
         """
         Train a model to predict the next state of a 1D cellular automaton.
 
@@ -182,7 +194,7 @@ class Learn:
             loss.backward()
             self.optimizer.step()
             if self.epoch % 10 == 0:
-                match = self.early_stopping(real_automata)
+                match = self.early_stopping(real_automata, path)
                 print(f"Epoch {self.epoch}, Loss: {loss.item()}, Match: {match:.2f}%")
                 if match > 99.99:
                     print(f"Early stopping at epoch {self.epoch}")
