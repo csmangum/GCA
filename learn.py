@@ -1,3 +1,4 @@
+import json
 from typing import Tuple
 
 import numpy as np
@@ -16,6 +17,25 @@ def plot_automata(rule_number, automata, path, epoch):
     plt.axis("off")
     plt.savefig(path + f"generated_automata_{epoch}.png")
     plt.close()
+
+
+def save_array(automata, path, epoch):
+    np.save(path + f"automata_{epoch}.npy", automata)
+
+
+def generate_from_model(model, num_generations, num_cells):
+    initial_state = [0] * num_cells  # Initialize with all zeros
+    initial_state[num_cells // 2] = 1  # Set the middle cell to 1
+    current_state = torch.tensor(initial_state, dtype=torch.float32).view(1, 1, -1)
+    predictions = [current_state.view(-1).numpy()]
+
+    with torch.no_grad():
+        for _ in range(num_generations - 1):
+            output = model(current_state)
+            current_state = (output > 0.5).float()  # Binarize the output
+            predictions.append(current_state.view(-1).numpy())
+
+    return predictions
 
 
 class Learn:
@@ -57,15 +77,20 @@ class Learn:
     """
 
     def __init__(
-        self, rule_number: int = 30, num_cells: int = 101, num_generations: int = 100
+        self,
+        rule_number: int = 30,
+        num_cells: int = 101,
+        num_generations: int = 100,
+        learning_rate: float = 0.001,
     ):
         self.rule_number = rule_number
         self.num_cells = num_cells
+        self.learning_rate = learning_rate
         self.num_generations = num_generations
         self.automata = Automata(rule_number, num_cells)
         self.model = Rule30CNN()
         self.criterion = nn.BCELoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         self.epoch = 0
         self.loss = 0
 
@@ -151,25 +176,42 @@ class Learn:
             The percentage of matches between the actual automaton and the model's
             predictions.
         """
-        # Prepare a new initial state
-        initial_state = [0] * self.num_cells  # Initialize with all zeros
-        initial_state[self.num_cells // 2] = 1  # Set the middle cell to 1
-        current_state = torch.tensor(initial_state, dtype=torch.float32).view(1, 1, -1)
-        predictions = [current_state.view(-1).numpy()]
-
-        with torch.no_grad():
-            for _ in range(self.num_generations - 1):
-                output = self.model(current_state)
-                current_state = (output > 0.5).float()  # Binarize the output
-                predictions.append(current_state.view(-1).numpy())
+        predictions = generate_from_model(
+            self.model, self.num_generations, self.num_cells
+        )
 
         match = Automata.compare(actual_automata, predictions)
 
-        plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
+        # plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
+        save_array(np.array(predictions), path, self.epoch)
 
         return match
 
-    def train(self, epochs: int = 2000, path: str = None):
+    def finalize(self, path: str):
+
+        # Plot the final generated automata
+        predictions = generate_from_model(
+            self.model, self.num_generations, self.num_cells
+        )
+        plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
+
+        # Save predictions as numpy array
+        save_array(np.array(predictions), path, self.epoch)
+
+        # Save training results as json
+        with open(path + "training_results.json", "w") as f:
+            json.dump(self.training_results, f)
+
+        # Save metadata as json
+        with open(path + "metadata.json", "w") as f:
+            json.dump(self.metadata, f)
+
+        # Save model
+        torch.save(self.model.state_dict(), path + "model.pth")
+
+        print(f"Training completed at epoch {self.epoch}")
+
+    def train(self, epochs: int = 3000, path: str = None):
         """
         Train a model to predict the next state of a 1D cellular automaton.
 
@@ -181,27 +223,47 @@ class Learn:
         epochs : int
             The number of epochs to train the model.
         """
-
+        self.training_results = []
+        self.metadata = {
+            "rule_number": self.rule_number,
+            "num_cells": self.num_cells,
+            "num_generations": self.num_generations,
+            "epochs": epochs,
+            "num_parameters": sum(p.numel() for p in self.model.parameters()),
+            "model": self.model.__class__.__name__,
+            "learning_rate": self.learning_rate,
+            "optimizer": self.optimizer.__class__.__name__,
+            "criterion": self.criterion.__class__.__name__,
+        }
         real_automata = self.automata.generate(self.num_generations)
+        save_array(real_automata, path, "real")
 
         train_data, _, train_labels, _ = self.prepare_data()
 
         self.epoch = 0
+
         while True:
             self.optimizer.zero_grad()
             output = self.model(train_data)
             loss = self.criterion(output, train_labels)
             loss.backward()
             self.optimizer.step()
+
             if self.epoch % 10 == 0:
                 match = self.early_stopping(real_automata, path)
+                self.training_results.append(
+                    {"epoch": self.epoch, "loss": loss.item(), "match": match}
+                )
                 print(f"Epoch {self.epoch}, Loss: {loss.item()}, Match: {match:.2f}%")
-                if match > 99.99:
+
+                if match > 99.999:
                     print(f"Early stopping at epoch {self.epoch}")
                     break
+
             self.epoch += 1
             self.loss = loss.item()
 
             if self.epoch == epochs:
-                print(f"Training completed at epoch {self.epoch}")
                 break
+
+        self.finalize(path)
