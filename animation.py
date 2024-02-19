@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 
-rule = 30
+rule = 109
 automata = np.load(f"results/rule_{rule}/automata_real.npy")
 
 
@@ -65,7 +65,7 @@ def evolution_gif(automata: np.ndarray, rule: int) -> str:
         buf.seek(0)
         images.append(imageio.imread(buf))
 
-    gif_path = f"results/rule_{rule}/automata_evolution_optimized.gif"
+    gif_path = f"results/rule_{rule}/automata_evolution.gif"
     imageio.mimsave(gif_path, images, duration=0.1)
     buf.close()  # Close the buffer
 
