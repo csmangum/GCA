@@ -10,7 +10,7 @@ rule = 30
 automata = np.load(f"results/rule_{rule}/automata_real.npy")
 
 
-def evolution_gif_optimized(automata: np.ndarray, rule: int) -> str:
+def evolution_gif(automata: np.ndarray, rule: int) -> str:
     """
     Create a gif with the evolution of the automata, where the most recent
     generation is highlighted in red.
@@ -73,4 +73,4 @@ def evolution_gif_optimized(automata: np.ndarray, rule: int) -> str:
 
 
 # Example usage
-evolution_gif_optimized(automata, rule)
+evolution_gif(automata, rule)
