@@ -56,7 +56,7 @@ def evolution_gif(automata: np.ndarray, rule: int) -> str:
 
         ax.clear()
         ax.imshow(partial_automata, cmap=cmap, interpolation="none", vmin=0, vmax=2)
-        ax.set(title=f"Rule {rule} - Generation {i}")
+        ax.set_title(f"Rule {rule} - Generation {i}", fontsize=20)
         ax.axis("off")
 
         # Reuse the buffer to save memory
