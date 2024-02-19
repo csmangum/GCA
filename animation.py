@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 
-# Assuming automata is already loaded as a numpy array
 rule = 30
 automata = np.load(f"results/rule_{rule}/automata_real.npy")
 
@@ -14,7 +13,19 @@ automata = np.load(f"results/rule_{rule}/automata_real.npy")
 def evolution_gif_optimized(automata: np.ndarray, rule: int) -> str:
     """
     Create a gif with the evolution of the automata, where the most recent
-    generation is highlighted in red, optimized version.
+    generation is highlighted in red.
+
+    Parameters
+    ----------
+    automata : np.ndarray
+        The automata to be animated.
+    rule : int
+        The rule used to generate the automata.
+
+    Returns
+    -------
+    str
+        The path to the generated gif.
     """
     images = []
     cmap = ListedColormap(["white", "black", "red"])
