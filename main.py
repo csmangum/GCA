@@ -26,8 +26,9 @@ def plot_automata(rule_number, automata, path):
     plt.axis("off")
     plt.savefig(path + f"real_automata_{rule_number}.png")
     plt.close()
-    
-for i in range(35,256):
+
+
+for i in range(141, 256):
     rule_number = i
     path = f"results/rule_{rule_number}/"
     make_dir(path)
@@ -35,3 +36,12 @@ for i in range(35,256):
     real_automata = learn.automata.generate(100)
     plot_automata(rule_number, real_automata, path)
     learn.train(path=path)
+
+
+# rule_number = 30
+# path = f"results/rule_{rule_number}/"
+# make_dir(path)
+# learn = Learn(rule_number)
+# real_automata = learn.automata.generate(100)
+# plot_automata(rule_number, real_automata, path)
+# learn.train(path=path)
