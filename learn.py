@@ -82,11 +82,17 @@ class Learn:
         num_cells: int = 101,
         num_generations: int = 100,
         learning_rate: float = 0.001,
+        training_size: int = 50000,
+        epochs: int = 3000,
+        path: str = None,
     ):
         self.rule_number = rule_number
         self.num_cells = num_cells
         self.learning_rate = learning_rate
         self.num_generations = num_generations
+        self.training_size = training_size
+        self.epochs = epochs
+        self.path = path
         self.automata = Automata(rule_number, num_cells)
         self.model = Rule30CNN()
         self.criterion = nn.BCELoss()
@@ -94,9 +100,7 @@ class Learn:
         self.epoch = 0
         self.loss = 0
 
-    def generate_data(
-        self, num_records: int = 50000
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def generate_data(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Generate training data for a 1D cellular automaton.
 
@@ -119,7 +123,7 @@ class Learn:
 
         data = []
         labels = []
-        for _ in range(num_records):
+        for _ in range(self.training_size):
             # Generate a random initial state
             initial_state = np.random.randint(2, size=self.num_cells)
 
@@ -160,7 +164,7 @@ class Learn:
 
         return train_data, test_data, train_labels, test_labels
 
-    def early_stopping(self, actual_automata: "Automata", path: str) -> float:
+    def early_stopping(self, actual_automata: "Automata") -> float:
         """
         Perform early stopping based on the accuracy of the model to the actual
         cellular automaton.
@@ -183,35 +187,35 @@ class Learn:
         match = Automata.compare(actual_automata, predictions)
 
         # plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
-        save_array(np.array(predictions), path, self.epoch)
+        save_array(np.array(predictions), self.path, self.epoch)
 
         return match
 
-    def finalize(self, path: str):
+    def finalize(self):
 
         # Plot the final generated automata
         predictions = generate_from_model(
             self.model, self.num_generations, self.num_cells
         )
-        plot_automata(self.rule_number, np.array(predictions), path, self.epoch)
+        plot_automata(self.rule_number, np.array(predictions), self.path, self.epoch)
 
         # Save predictions as numpy array
-        save_array(np.array(predictions), path, self.epoch)
+        save_array(np.array(predictions), self.path, self.epoch)
 
         # Save training results as json
-        with open(path + "training_results.json", "w") as f:
+        with open(self.path + "training_results.json", "w") as f:
             json.dump(self.training_results, f)
 
         # Save metadata as json
-        with open(path + "metadata.json", "w") as f:
+        with open(self.path + "metadata.json", "w") as f:
             json.dump(self.metadata, f)
 
         # Save model
-        torch.save(self.model.state_dict(), path + "model.pth")
+        torch.save(self.model.state_dict(), self.path + "model.pth")
 
         print(f"Training completed at epoch {self.epoch}")
 
-    def train(self, epochs: int = 3000, path: str = None):
+    def train(self):
         """
         Train a model to predict the next state of a 1D cellular automaton.
 
@@ -228,7 +232,7 @@ class Learn:
             "rule_number": self.rule_number,
             "num_cells": self.num_cells,
             "num_generations": self.num_generations,
-            "epochs": epochs,
+            "epochs": self.epochs,
             "num_parameters": sum(p.numel() for p in self.model.parameters()),
             "model": self.model.__class__.__name__,
             "learning_rate": self.learning_rate,
@@ -236,7 +240,7 @@ class Learn:
             "criterion": self.criterion.__class__.__name__,
         }
         real_automata = self.automata.generate(self.num_generations)
-        save_array(real_automata, path, "real")
+        save_array(real_automata, self.path, "real")
 
         train_data, _, train_labels, _ = self.prepare_data()
 
@@ -249,13 +253,14 @@ class Learn:
             loss.backward()
             self.optimizer.step()
 
-            if self.epoch % 10 == 0:
-                match = self.early_stopping(real_automata, path)
+            if self.epoch % 25 == 0:
+                match = self.early_stopping(real_automata)
                 self.training_results.append(
                     {"epoch": self.epoch, "loss": loss.item(), "match": match}
                 )
                 print(f"Epoch {self.epoch}, Loss: {loss.item()}, Match: {match:.2f}%")
 
+                # if match > 99.999 and loss.item() < 0.1:
                 if match > 99.999:
                     print(f"Early stopping at epoch {self.epoch}")
                     break
@@ -263,7 +268,7 @@ class Learn:
             self.epoch += 1
             self.loss = loss.item()
 
-            if self.epoch == epochs:
+            if self.epoch == self.epochs:
                 break
 
-        self.finalize(path)
+        self.finalize()
