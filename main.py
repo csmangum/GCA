@@ -34,25 +34,31 @@ def plot_automata(rule_number, automata, path):
     plt.close()
 
 
-# for i in range(141, 256):
-#     rule_number = i
-#     path = f"results/rule_{rule_number}/"
-#     make_dir(path)
-#     learn = Learn(rule_number)
-#     real_automata = learn.automata.generate(100)
-#     plot_automata(rule_number, real_automata, path)
-#     learn.train(path=path)
+for i in range(0, 256):
+    rule_number = i
+    path = f"results/rule_{rule_number}/"
+    make_dir(path)
+    learn = Learn(
+        rule_number=rule_number,
+        num_cells=NUM_CELLS,
+        num_generations=GENERATIONS,
+        learning_rate=LEARNING_RATE,
+        training_size=TRAINING_SIZE,
+        epochs=EPOCHS,
+        path=path,
+    )
+    learn.train()
 
-make_dir(PATH)
-learn = Learn(
-    rule_number=RULE_NUMBER,
-    num_cells=NUM_CELLS,
-    num_generations=GENERATIONS,
-    learning_rate=LEARNING_RATE,
-    training_size=TRAINING_SIZE,
-    epochs=EPOCHS,
-    path=PATH,
-)
-# real_automata = learn.automata.generate(100)
-# plot_automata(rule_number, real_automata, path)
-learn.train()
+# make_dir(PATH)
+# learn = Learn(
+#     rule_number=RULE_NUMBER,
+#     num_cells=NUM_CELLS,
+#     num_generations=GENERATIONS,
+#     learning_rate=LEARNING_RATE,
+#     training_size=TRAINING_SIZE,
+#     epochs=EPOCHS,
+#     path=PATH,
+# )
+# # real_automata = learn.automata.generate(100)
+# # plot_automata(rule_number, real_automata, path)
+# learn.train()
