@@ -9,7 +9,7 @@ from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from PIL import Image, ImageSequence
 
-rule = 30
+rule = 75
 automata = np.load(f"results/rule_{rule}/automata_real.npy")
 
 
@@ -235,7 +235,7 @@ def create_composite_image(
 
 
 # Example usage
-gif_path = "results/rule_30/training_evolution.gif"
-static_path = "results/rule_30/real_automata_30.png"  #! Need to remove the number at the end to make more consistent
-output_path = "results/rule_30/composite.gif"
+gif_path = f"results/rule_{rule}/training_evolution.gif"
+static_path = f"results/rule_{rule}/real_automata_{rule}.png"  #! Need to remove the number at the end to make more consistent
+output_path = f"results/rule_{rule}/composite.gif"
 create_composite_image(static_path, gif_path, output_path)
