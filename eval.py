@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 import torch
 
 from automata import Automata
-from model import Rule30CNN
+from model import AutomataCNN
+from settings import *
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-rule_number = 30
-generations = 500
+rule_number = RULE_NUMBER
+generations = EVAL_GENERATIONS
 
-# Generate the automata for rule 30 at 1000 generations
-automata = Automata(rule_number, 101)
+# Generate the real automata
+automata = Automata(rule_number, NUM_CELLS)
 states = automata.generate(generations)
 
 plt.figure(figsize=(10, 10))
@@ -23,7 +24,7 @@ plt.show()
 
 
 # Load the model from file
-model = Rule30CNN()
+model = AutomataCNN()
 model.load_state_dict(torch.load(f"results/rule_{rule_number}/model.pth"))
 
 
