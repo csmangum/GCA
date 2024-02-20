@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 from automata import Automata
-from model import Rule30CNN
+from model import AutomataCNN
 
 
 def plot_automata(rule_number, automata, path, epoch):
@@ -94,7 +94,7 @@ class Learn:
         self.epochs = epochs
         self.path = path
         self.automata = Automata(rule_number, num_cells)
-        self.model = Rule30CNN()
+        self.model = AutomataCNN()
         self.criterion = nn.BCELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         self.epoch = 0
@@ -260,8 +260,7 @@ class Learn:
                 )
                 print(f"Epoch {self.epoch}, Loss: {loss.item()}, Match: {match:.2f}%")
 
-                # if match > 99.999 and loss.item() < 0.1:
-                if match > 99.999:
+                if match > 99.999 and loss.item() < 0.05:
                     print(f"Early stopping at epoch {self.epoch}")
                     break
 
