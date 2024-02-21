@@ -30,7 +30,7 @@ def plot_automata(rule_number, automata, path):
     plt.imshow(automata, cmap="binary", interpolation="nearest")
     plt.title(f"Real Cellular Automata Rule {rule_number}")
     plt.axis("off")
-    plt.savefig(path + f"real_automata_{rule_number}.png")
+    plt.savefig(path + f"real_automata.png")
     plt.close()
 
 
@@ -47,6 +47,8 @@ for i in range(0, 256):
         epochs=EPOCHS,
         path=path,
     )
+    real_automata = learn.automata.generate(100)
+    plot_automata(rule_number, real_automata, path)
     learn.train()
 
 # make_dir(PATH)
