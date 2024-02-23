@@ -16,12 +16,12 @@ generations = EVAL_GENERATIONS
 automata = Automata(rule_number, NUM_CELLS)
 states = automata.generate(generations)
 
-plt.figure(figsize=(10, 10))
+plt.figure(figsize=(10, 50))
 plt.imshow(states, cmap="binary", interpolation="nearest")
-plt.title(f"Real Cellular Automata Rule {rule_number}")
+plt.title(f"Real", fontsize=40)
 plt.axis("off")
-plt.show()
-
+plt.savefig(f"results/rule_{rule_number}/extended_real_automata.png", bbox_inches="tight")
+plt.close()
 
 # Load the model from file
 model = AutomataCNN()
@@ -46,12 +46,12 @@ def generate_from_model(model, num_generations, num_cells):
 # Generate the automata using the model
 predictions = generate_from_model(model, generations, 101)
 
-plt.figure(figsize=(10, 10))
+plt.figure(figsize=(10, 50))
 plt.imshow(predictions, cmap="binary", interpolation="nearest")
-plt.title(f"Predicted Cellular Automata Rule {rule_number}")
+plt.title(f"Generated", fontsize=40)
 plt.axis("off")
-plt.show()
-
+plt.savefig(f"results/rule_{rule_number}/extended_generated_automata.png", bbox_inches="tight")
+plt.close()
 
 print(f"Real automata shape: {states.shape}")
 print(f"Predicted automata shape: {len(predictions[0])}")
