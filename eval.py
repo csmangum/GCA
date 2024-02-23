@@ -4,10 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 
 from automata import Automata
-from model import AutomataCNN
+from models import AutomataCNN
 from settings import *
-
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 rule_number = RULE_NUMBER
 generations = EVAL_GENERATIONS
@@ -20,7 +18,9 @@ plt.figure(figsize=(10, 50))
 plt.imshow(states, cmap="binary", interpolation="nearest")
 plt.title(f"Real", fontsize=40)
 plt.axis("off")
-plt.savefig(f"results/rule_{rule_number}/extended_real_automata.png", bbox_inches="tight")
+plt.savefig(
+    f"results/rule_{rule_number}/extended_real_automata.png", bbox_inches="tight"
+)
 plt.close()
 
 # Load the model from file
@@ -50,7 +50,9 @@ plt.figure(figsize=(10, 50))
 plt.imshow(predictions, cmap="binary", interpolation="nearest")
 plt.title(f"Generated", fontsize=40)
 plt.axis("off")
-plt.savefig(f"results/rule_{rule_number}/extended_generated_automata.png", bbox_inches="tight")
+plt.savefig(
+    f"results/rule_{rule_number}/extended_generated_automata.png", bbox_inches="tight"
+)
 plt.close()
 
 print(f"Real automata shape: {states.shape}")
