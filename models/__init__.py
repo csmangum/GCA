@@ -1,0 +1,1 @@
+from models.cnn import AutomataCNN as AutomataCNN
