@@ -56,7 +56,7 @@ def training_evolution(rule: int) -> str:
         automata = np.load(os.path.join(rule_folder, automata_file))
         ax.clear()
         ax.imshow(automata, cmap=cmap, interpolation="none", vmin=0, vmax=1)
-        ax.set_title(f"Rule {rule} - Epoch {generation_number}", fontsize=20)
+        ax.set_title(f"Learning Rule {rule} - Epoch {generation_number}", fontsize=20)
         ax.axis("off")
 
         # Reuse the buffer to save memory
