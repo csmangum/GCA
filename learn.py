@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 from automata import Automata
-from model import AutomataCNN
+from models import AutomataCNN
 
 
 def plot_automata(rule_number, automata, path, epoch):
