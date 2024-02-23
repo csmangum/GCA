@@ -28,28 +28,28 @@ def make_dir(path):
 def plot_automata(rule_number, automata, path):
     plt.figure(figsize=(10, 10))
     plt.imshow(automata, cmap="binary", interpolation="nearest")
-    plt.title(f"Real Cellular Automata Rule {rule_number}")
+    # plt.title(f"Real Cellular Automata Rule {rule_number}")
     plt.axis("off")
-    plt.savefig(path + f"real_automata.png")
+    plt.savefig(path + f"real_automata.png", bbox_inches="tight")
     plt.close()
 
 
-for i in range(0, 256):
-    rule_number = i
-    path = f"results/rule_{rule_number}/"
-    make_dir(path)
-    learn = Learn(
-        rule_number=rule_number,
-        num_cells=NUM_CELLS,
-        num_generations=GENERATIONS,
-        learning_rate=LEARNING_RATE,
-        training_size=TRAINING_SIZE,
-        epochs=EPOCHS,
-        path=path,
-    )
-    real_automata = learn.automata.generate(100)
-    plot_automata(rule_number, real_automata, path)
-    learn.train()
+# for i in range(0, 256):
+#     rule_number = i
+#     path = f"results/rule_{rule_number}/"
+#     make_dir(path)
+#     learn = Learn(
+#         rule_number=rule_number,
+#         num_cells=NUM_CELLS,
+#         num_generations=GENERATIONS,
+#         learning_rate=LEARNING_RATE,
+#         training_size=TRAINING_SIZE,
+#         epochs=EPOCHS,
+#         path=path,
+#     )
+#     real_automata = learn.automata.generate(100)
+#     plot_automata(rule_number, real_automata, path)
+#     learn.train()
 
 # make_dir(PATH)
 # learn = Learn(
@@ -61,6 +61,10 @@ for i in range(0, 256):
 #     epochs=EPOCHS,
 #     path=PATH,
 # )
-# # real_automata = learn.automata.generate(100)
-# # plot_automata(rule_number, real_automata, path)
+# real_automata = learn.automata.generate(100)
+# plot_automata(RULE_NUMBER, real_automata, PATH)
 # learn.train()
+
+from animations.training import training_evolution
+
+# training_evolution(73)
