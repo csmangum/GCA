@@ -32,7 +32,7 @@ def plot_automata(
         if not path:
             path = infer_path(path, rule_number, epoch)
         else:
-            path = path + f"real_automata_{rule_number}.png"
+            path = path + f"real_automata.png"
         plt.savefig(path)
     if show:
         plt.show()
