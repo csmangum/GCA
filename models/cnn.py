@@ -65,19 +65,25 @@ class AutomataCNN(nn.Module):
         x = torch.sigmoid(self.fc1(x))
         return x
 
-    def save(self, path: str) -> None:
-        """
-        Save the model to file.
 
-        Parameters
-        ----------
-        path : str
-            The path to save the model to.
-        """
-        torch.save(self.state_dict(), path)
+class GeneralAutomataCNN(nn.Module):
+    """
+    A convolutional neural network for learning all 256 rules of 1D cellular automata.
 
-    def load(self, path: str) -> None:
-        """
-        Load the model from file.
-        """
-        self.load_state_dict(torch.load(path))
+    This model takes as input a tensor of shape (batch_size, 2, num_cells) where the first channel
+    is the current state of the cellular automaton, and the second channel is the binary encoding of the rule.
+    It returns a tensor of shape (batch_size, num_cells) containing the next state of the cellular automaton.
+    """
+
+    def __init__(self, num_cells: int = 101) -> None:
+        super(GeneralAutomataCNN, self).__init__()
+        self.num_cells = num_cells
+        # Adjusted for 2 input channels: the current state and the rule encoding
+        self.conv1 = nn.Conv1d(2, 10, kernel_size=3, padding=1)
+        self.fc1 = nn.Linear(10 * num_cells, num_cells)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.relu(self.conv1(x))
+        x = x.view(-1, 10 * self.num_cells)
+        x = torch.sigmoid(self.fc1(x))
+        return x
