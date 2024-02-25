@@ -10,7 +10,23 @@ from automata import Automata
 from models import AutomataCNN
 
 
-def plot_automata(rule_number, automata, path, epoch):
+def plot_automata(
+    rule_number: int, automata: np.ndarray, path: str, epoch: int
+) -> None:
+    """
+    Plot a 2D array representing a cellular automaton and save it to a file.
+
+    Parameters
+    ----------
+    rule_number : int
+        The rule number of the cellular automaton.
+    automata : np.ndarray
+        The array representing the cellular automaton.
+    path : str
+        The path to save the plot to.
+    epoch : int
+        The epoch number of the training.
+    """
     plt.figure(figsize=(10, 10))
     plt.imshow(automata, cmap="binary", interpolation="nearest")
     plt.title(f"Generated Cellular Automata Rule {rule_number}")
@@ -19,11 +35,40 @@ def plot_automata(rule_number, automata, path, epoch):
     plt.close()
 
 
-def save_array(automata, path, epoch):
+def save_array(automata: np.ndarray, path: str, epoch: int) -> None:
+    """
+    Save a 2D array representing a cellular automaton to a file.
+
+    Parameters
+    ----------
+    automata : np.ndarray
+        The array representing the cellular automaton.
+    path : str
+        The path to save the array to.
+    epoch : int
+        The epoch number of the training.
+    """
     np.save(path + f"automata_{epoch}.npy", automata)
 
 
-def generate_from_model(model, num_generations, num_cells):
+def generate_from_model(model: nn.Module, num_generations: int, num_cells: int) -> list:
+    """
+    Generate a 1D cellular automaton from a machine learning model.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The machine learning model to use for generating the cellular automaton.
+    num_generations : int
+        The number of generations to generate.
+    num_cells : int
+        The number of cells in each row of the cellular automaton.
+
+    Returns
+    -------
+    List[np.ndarray]
+        A list of arrays representing each generation of the cellular automaton.
+    """
     initial_state = [0] * num_cells  # Initialize with all zeros
     initial_state[num_cells // 2] = 1  # Set the middle cell to 1
     current_state = torch.tensor(initial_state, dtype=torch.float32).view(1, 1, -1)
@@ -191,7 +236,10 @@ class Learn:
 
         return match
 
-    def finalize(self):
+    def finalize(self) -> None:
+        """
+        Finalize the training process by saving the model and training results.
+        """
 
         # Plot the final generated automata
         predictions = generate_from_model(
@@ -215,7 +263,7 @@ class Learn:
 
         print(f"Training completed at epoch {self.epoch}")
 
-    def train(self):
+    def train(self) -> None:
         """
         Train a model to predict the next state of a 1D cellular automaton.
 
