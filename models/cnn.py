@@ -1,3 +1,16 @@
+"""
+Kernel size:  
+    Size of the sliding window that moves across the input signal. 
+    For a 1D convolutional neural network (CNN), the kernel size is a single 
+    integer that defines the length of this window. For a 1D CA CNN, the kernel
+    size is typically 3, which means the window is 3 cells wide, for the 3 cell 
+    states.
+    
+Padding:
+    The number of cells to add to the beginning and end of the input signal. 
+    This is useful for maintaining the same input and output dimensions. 
+"""
+
 import torch
 import torch.nn as nn
 
@@ -60,9 +73,16 @@ class AutomataCNN(nn.Module):
         torch.Tensor
             The output tensor from the model.
         """
+        # Apply RELU activation function to the output of the first conv layer
         x = torch.relu(self.conv1(x))
+
+        # Reshape the tensor to have the same number of columns as the number of cells
         x = x.view(-1, 10 * self.num_cells)
+
+        # Apply the sigmoid activation function to the output of the first
+        # fully connected layer
         x = torch.sigmoid(self.fc1(x))
+
         return x
 
 
@@ -99,8 +119,8 @@ class GeneralAutomataCNN(nn.Module):
         super(GeneralAutomataCNN, self).__init__()
         self.num_cells = num_cells
         # Adjusted for 2 input channels: the current state and the rule encoding
-        self.conv1 = nn.Conv1d(2, 10, kernel_size=3, padding=1)
-        self.fc1 = nn.Linear(10 * num_cells, num_cells)
+        self.conv1 = nn.Conv1d(2, 256, kernel_size=3, padding=1)
+        self.fc1 = nn.Linear(256 * num_cells, num_cells)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -116,7 +136,14 @@ class GeneralAutomataCNN(nn.Module):
         torch.Tensor
             The output tensor from the model.
         """
+        # Apply RELU activation function to the output of the first conv layer
         x = torch.relu(self.conv1(x))
-        x = x.view(-1, 10 * self.num_cells)
+
+        # Reshape the tensor to have the same number of columns as the number of cells
+        x = x.view(-1, 256 * self.num_cells)
+
+        # Apply the sigmoid activation function to the output of the first
+        # fully connected layer
         x = torch.sigmoid(self.fc1(x))
+
         return x
