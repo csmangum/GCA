@@ -51,6 +51,8 @@ class Learn:
         training_size=50000,
         epochs=3000,
         path=None,
+        out_channels=20,
+        kernel_size=3,
     ):
         # Attributes initialization
         self.num_cells = num_cells
@@ -59,11 +61,12 @@ class Learn:
         self.training_size = training_size
         self.epochs = epochs
         self.path = path or "./"
-        self.model = GeneralAutomataCNN(num_cells)
+        self.model = GeneralAutomataCNN(num_cells, out_channels, kernel_size)
         self.criterion = nn.BCELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         self.epoch = 0
         self.loss = 0
+        self.loss_history = []
 
     def generate_data(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -92,7 +95,7 @@ class Learn:
                 (initial_state, rule_encoding_repeated)
             )  # Stack state and rule
             data.append(combined_input)
-            labels.append(next_state)
+            labels.append(next_state[1])
         return torch.tensor(data, dtype=torch.float32), torch.tensor(
             labels, dtype=torch.float32
         )
@@ -103,7 +106,7 @@ class Learn:
         """
         train_data, train_labels = self.generate_data()
         train_data = train_data.view(-1, 2, self.num_cells)
-        train_labels = train_labels.view(-1, self.num_cells)
+        train_labels = train_labels.view(-1, 1)
 
         for epoch in range(self.epochs):
             self.optimizer.zero_grad()
@@ -112,8 +115,11 @@ class Learn:
             loss.backward()
             self.optimizer.step()
             if epoch % 100 == 0:
+                self.loss_history.append(loss.item())
                 print(f"Epoch {epoch}, Loss: {loss.item()}")
 
             if loss.item() < 0.01:
                 print(f"Epoch {epoch}, Loss: {loss.item()}")
                 break
+
+        return self.loss_history
