@@ -109,7 +109,13 @@ class GeneralAutomataCNN(nn.Module):
         Forward pass of the GeneralAutomataCNN model.
     """
 
-    def __init__(self, num_cells: int = 101) -> None:
+    def __init__(
+        self,
+        num_cells: int = 3,
+        out_channels: int = 10,
+        kernel_size: int = 3,
+        output_size: int = 1,
+    ) -> None:
         """
         Parameters
         ----------
@@ -118,9 +124,10 @@ class GeneralAutomataCNN(nn.Module):
         """
         super(GeneralAutomataCNN, self).__init__()
         self.num_cells = num_cells
+        self.out_channels = out_channels
         # Adjusted for 2 input channels: the current state and the rule encoding
-        self.conv1 = nn.Conv1d(2, 256, kernel_size=3, padding=1)
-        self.fc1 = nn.Linear(256 * num_cells, num_cells)
+        self.conv1 = nn.Conv1d(2, out_channels, kernel_size=kernel_size, padding=1)
+        self.fc1 = nn.Linear(out_channels * num_cells, output_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -140,7 +147,7 @@ class GeneralAutomataCNN(nn.Module):
         x = torch.relu(self.conv1(x))
 
         # Reshape the tensor to have the same number of columns as the number of cells
-        x = x.view(-1, 256 * self.num_cells)
+        x = x.view(-1, self.out_channels * self.num_cells)
 
         # Apply the sigmoid activation function to the output of the first
         # fully connected layer
