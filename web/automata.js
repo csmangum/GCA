@@ -2,7 +2,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("automataCanvas");
   const ctx = canvas.getContext("2d");
   const playPauseButton = document.getElementById("playPauseButton");
-  const updateIntervalInput = document.getElementById("updateIntervalInput");
+  const animationSpeedSlider = document.getElementById("animationSpeedSlider");
+  const gridSizeInput = document.getElementById("gridSizeInput");
+  const cellSizeInput = document.getElementById("cellSizeInput");
+  const resetButton = document.getElementById("resetButton");
   const ruleSetSelect = document.getElementById("ruleSetSelect");
 
   // Populate the ruleSetSelect with options
@@ -13,31 +16,38 @@ document.addEventListener("DOMContentLoaded", function () {
     ruleSetSelect.appendChild(option);
   }
 
-  let cellSize = 10,
-    gridWidth = 40,
-    gridHeight = 40;
+  let cellSize = parseInt(cellSizeInput.value, 10),
+    gridWidth = parseInt(gridSizeInput.value, 10),
+    gridHeight = gridWidth; // Assuming square grid for simplicity
   let ruleSet = getRuleSet(parseInt(ruleSetSelect.value));
-  let updateInterval = parseInt(updateIntervalInput.value);
+  let updateInterval = parseInt(animationSpeedSlider.value);
   let isPlaying = true; // Animation state
-  let lastFrameTime = Date.now();
+  let lastUpdateTime = 0;
+  let frameRequest;
 
-  canvas.width = gridWidth * cellSize;
-  canvas.height = gridHeight * cellSize;
-
-  let generations = [Array(gridHeight).fill(false)];
-
-  function init() {
-    generations[0][Math.floor(gridHeight / 2)] = true;
-    if (isPlaying) draw();
+  function resizeCanvas() {
+    canvas.width = gridWidth * cellSize;
+    canvas.height = gridHeight * cellSize;
   }
 
-  function draw() {
-    const currentTime = Date.now();
-    const timeElapsed = currentTime - lastFrameTime;
+  function initGenerations() {
+    generations = [Array(gridHeight).fill(false)];
+    generations[0][Math.floor(gridHeight / 2)] = true;
+  }
 
-    if (!isPlaying) return;
+  let generations = [Array(gridHeight).fill(false)];
+  initGenerations();
+  resizeCanvas();
 
-    if (timeElapsed > updateInterval) {
+  function draw(timestamp) {
+    const delay = Math.max(1, 1001 - updateInterval);
+
+    if (!isPlaying) {
+      lastUpdateTime = timestamp;
+      return;
+    }
+
+    if (!lastUpdateTime || timestamp - lastUpdateTime > delay) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       generations.forEach((generation, genIndex) => {
         generation.forEach((cell, cellIndex) => {
@@ -52,14 +62,14 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       updateGenerations();
-      lastFrameTime = currentTime;
+      lastUpdateTime = timestamp;
     }
 
-    requestAnimationFrame(draw);
+    frameRequest = requestAnimationFrame(draw);
   }
 
   function updateGenerations() {
-    if (generations.length < gridWidth) {
+    if (generations.length < gridHeight) {
       const newGeneration = updateGrid(
         generations[generations.length - 1],
         ruleSet
@@ -95,28 +105,49 @@ document.addEventListener("DOMContentLoaded", function () {
     return newGrid;
   }
 
-  // Event Listeners
   playPauseButton.addEventListener("click", function () {
     isPlaying = !isPlaying;
     playPauseButton.textContent = isPlaying ? "Pause" : "Play";
-    if (isPlaying && !lastFrameTime) {
-      // Ensure animation resumes correctly
-      lastFrameTime = Date.now();
-      draw();
+    if (isPlaying) {
+      lastUpdateTime = performance.now();
+      frameRequest = requestAnimationFrame(draw);
+    } else if (frameRequest) {
+      cancelAnimationFrame(frameRequest);
     }
   });
 
-  updateIntervalInput.addEventListener("input", function () {
+  animationSpeedSlider.addEventListener("input", function () {
     updateInterval = parseInt(this.value, 10);
+    lastUpdateTime = performance.now();
+  });
+
+  gridSizeInput.addEventListener("input", function () {
+    gridWidth = parseInt(this.value, 10);
+    gridHeight = gridWidth; // Keep the grid square
+    resizeCanvas();
+    initGenerations();
+    if (isPlaying) draw();
+  });
+
+  cellSizeInput.addEventListener("input", function () {
+    cellSize = parseInt(this.value, 10);
+    resizeCanvas();
+    if (isPlaying) draw();
   });
 
   ruleSetSelect.addEventListener("change", function () {
     ruleSet = getRuleSet(parseInt(this.value, 10));
-    // Reset generations on ruleSet change
-    generations = [Array(gridHeight).fill(false)];
-    generations[0][Math.floor(gridHeight / 2)] = true;
+    initGenerations();
     if (isPlaying) draw();
   });
 
-  init();
+  resetButton.addEventListener("click", function () {
+    initGenerations();
+    if (isPlaying) draw();
+  });
+
+  // Initialize animation
+  if (isPlaying) {
+    frameRequest = requestAnimationFrame(draw);
+  }
 });
