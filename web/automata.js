@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let ruleSet = getRuleSet(parseInt(ruleSetSelect.value));
   let updateInterval = parseInt(updateIntervalInput.value);
   let isPlaying = true; // Animation state
+  let lastFrameTime = Date.now();
 
   canvas.width = gridWidth * cellSize;
   canvas.height = gridHeight * cellSize;
@@ -31,23 +32,30 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function draw() {
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - lastFrameTime;
+
     if (!isPlaying) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    generations.forEach((generation, genIndex) => {
-      generation.forEach((cell, cellIndex) => {
-        ctx.fillStyle = cell ? "#000" : "#fff";
-        ctx.fillRect(
-          genIndex * cellSize,
-          cellIndex * cellSize,
-          cellSize,
-          cellSize
-        );
+    if (timeElapsed > updateInterval) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      generations.forEach((generation, genIndex) => {
+        generation.forEach((cell, cellIndex) => {
+          ctx.fillStyle = cell ? "#000" : "#fff";
+          ctx.fillRect(
+            cellIndex * cellSize,
+            genIndex * cellSize,
+            cellSize,
+            cellSize
+          );
+        });
       });
-    });
 
-    updateGenerations();
-    if (isPlaying) setTimeout(draw, updateInterval);
+      updateGenerations();
+      lastFrameTime = currentTime;
+    }
+
+    requestAnimationFrame(draw);
   }
 
   function updateGenerations() {
@@ -91,7 +99,11 @@ document.addEventListener("DOMContentLoaded", function () {
   playPauseButton.addEventListener("click", function () {
     isPlaying = !isPlaying;
     playPauseButton.textContent = isPlaying ? "Pause" : "Play";
-    if (isPlaying) draw();
+    if (isPlaying && !lastFrameTime) {
+      // Ensure animation resumes correctly
+      lastFrameTime = Date.now();
+      draw();
+    }
   });
 
   updateIntervalInput.addEventListener("input", function () {
