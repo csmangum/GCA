@@ -7,6 +7,42 @@ document.addEventListener("DOMContentLoaded", function () {
   const cellSizeInput = document.getElementById("cellSizeInput");
   const resetButton = document.getElementById("resetButton");
   const ruleSetSelect = document.getElementById("ruleSetSelect");
+  const ageColorCodingCheckbox = document.getElementById(
+    "ageColorCodingCheckbox"
+  );
+  const colorPaletteSelect = document.getElementById("colorPaletteSelect");
+
+  const colorPalettes = {
+    palette1: [
+      "#ffffcc",
+      "#ffeda0",
+      "#fed976",
+      "#feb24c",
+      "#fd8d3c",
+      "#fc4e2a",
+      "#e31a1c",
+      "#bd0026",
+      "#800026",
+    ],
+    palette2: [
+      "#f7fcf5",
+      "#e5f5e0",
+      "#c7e9c0",
+      "#a1d99b",
+      "#74c476",
+      "#41ab5d",
+      "#238b45",
+      "#006d2c",
+      "#00441b",
+    ],
+  };
+
+  Object.keys(colorPalettes).forEach((key) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = key.charAt(0).toUpperCase() + key.slice(1); // Capitalize the name
+    colorPaletteSelect.appendChild(option);
+  });
 
   // Populate the ruleSetSelect with options
   for (let i = 0; i < 256; i++) {
@@ -31,11 +67,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function initGenerations() {
-    generations = [Array(gridHeight).fill(false)];
-    generations[0][Math.floor(gridHeight / 2)] = true;
+    generations = [
+      Array(gridHeight)
+        .fill(null)
+        .map(() => ({ alive: false, age: 0 })),
+    ];
+    generations[0][Math.floor(gridHeight / 2)] = { alive: true, age: 1 };
   }
 
-  let generations = [Array(gridHeight).fill(false)];
+  let generations = [];
   initGenerations();
   resizeCanvas();
 
@@ -49,9 +89,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!lastUpdateTime || timestamp - lastUpdateTime > delay) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const palette = colorPalettes[colorPaletteSelect.value];
+
       generations.forEach((generation, genIndex) => {
         generation.forEach((cell, cellIndex) => {
-          ctx.fillStyle = cell ? "#000" : "#fff";
+          if (cell.alive) {
+            if (ageColorCodingCheckbox.checked) {
+              const colorIndex = Math.min(cell.age - 1, palette.length - 1);
+              ctx.fillStyle = palette[colorIndex];
+            } else {
+              ctx.fillStyle = "#000"; // Default color for living cells
+            }
+          } else {
+            ctx.fillStyle = "#fff"; // Color for dead cells
+          }
           ctx.fillRect(
             cellIndex * cellSize,
             genIndex * cellSize,
@@ -91,16 +143,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateGrid(grid, ruleSet) {
-    const newGrid = Array(grid.length).fill(false);
+    const newGrid = Array(grid.length)
+      .fill(null)
+      .map(() => ({ alive: false, age: 0 }));
     for (let i = 0; i < grid.length; i++) {
       const leftNeighbor = i === 0 ? grid[grid.length - 1] : grid[i - 1];
       const rightNeighbor = i === grid.length - 1 ? grid[0] : grid[i + 1];
       const self = grid[i];
       const ruleIndex =
-        ((leftNeighbor ? 1 : 0) << 2) |
-        ((self ? 1 : 0) << 1) |
-        (rightNeighbor ? 1 : 0);
-      newGrid[i] = ruleSet[7 - ruleIndex];
+        ((leftNeighbor.alive ? 1 : 0) << 2) |
+        ((self.alive ? 1 : 0) << 1) |
+        (rightNeighbor.alive ? 1 : 0);
+      const alive = ruleSet[7 - ruleIndex];
+      newGrid[i] = {
+        alive: alive,
+        age: alive ? (self.alive ? self.age + 1 : 1) : 0,
+      };
     }
     return newGrid;
   }
