@@ -34,18 +34,30 @@ class SimpleSequentialNetwork(nn.Module):
         """
         return self.net(x)
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
+    def predict(self, current_state: torch.Tensor) -> list:
         """
         Predict the output of the network.
 
         Parameters
         ----------
-        x : torch.Tensor
-            The input to the network.
+        current_state : torch.Tensor
+            N length tensor of the current state.
 
         Returns
         -------
-        torch.Tensor
-            The predicted output of the network.
+        list
+            The predicted next state.
         """
-        return self.forward(x)
+        new_state = []
+
+        for i in range(len(current_state)):
+            left = current_state[i - 1] if i > 0 else 0
+            center = current_state[i]
+            right = current_state[i + 1] if i < len(current_state) - 1 else 0
+            next_state = self.forward(
+                torch.tensor([left, center, right], dtype=torch.float32).view(
+                    1, -1
+                )  # Reshape to add batch dimension
+            )
+            new_state.append(int(round(next_state.item())))
+        return new_state
