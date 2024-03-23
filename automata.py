@@ -84,14 +84,19 @@ class Automata:
             next_gen.append(next_state)
         return next_gen
 
-    def generate(self, num_generations: int) -> np.ndarray:
+    def execute(
+        self,
+        num_generations: int,
+        num_cells: int = 101,
+        initial_state: np.ndarray = None,
+    ) -> np.ndarray:
         """
-        Generate a 2D array of cell states for a 1D cellular automaton.
+        Execute a 2D array of cell states for a 1D cellular automaton.
 
         Parameters
         ----------
         num_generations : int
-            The number of rows of cells to generate.
+            The number of rows of cells to execute.
 
         Returns
         -------
@@ -100,10 +105,38 @@ class Automata:
         """
 
         self.num_generations = num_generations
+
+        if initial_state is not None:
+            self.initial_state = initial_state
+
         cells = self.initial_state
         history = [cells]
         for _ in range(self.num_generations - 1):
             cells = self.apply_rule(cells)
+            history.append(cells)
+        return np.array(history)
+
+    def generate(self, num_generations: int, model) -> np.ndarray:
+        """
+        Generate a cellular automata from a provided model
+
+        Parameters
+        ----------
+        num_generations : int
+            The number of rows of cells to execute.
+        model : model
+            trained pytorch model
+
+        Returns
+        -------
+        np.ndarray
+            A 2D NumPy array of cell states with shape (num_generations,
+            initial_state.size).
+        """
+        cells = self.initial_state
+        history = [cells]
+        for _ in range(num_generations - 1):
+            cells = model.predict(cells)
             history.append(cells)
         return np.array(history)
 
@@ -141,3 +174,71 @@ class Automata:
             match_percentage = 0.0
 
         return match_percentage
+
+    def plot(self, history: np.ndarray) -> None:
+        """
+        Plot the history of the cellular automata
+
+        Parameters
+        ----------
+        history : np.ndarray
+            The history of the cellular automata
+        """
+        import matplotlib.pyplot as plt
+
+        plt.imshow(history, cmap="Greys", interpolation="nearest")
+        plt.show()
+
+
+#! not correct data coming out
+class SequenceDataGenerator:
+    def __init__(self, rule_number, sequence_length=10):
+        self.rule_number = rule_number
+        self.sequence_length = sequence_length
+        self.rule_binary = np.array(
+            [int(x) for x in np.binary_repr(self.rule_number, width=8)]
+        )
+
+    def _apply_rule(self, current_state):
+        """Apply CA rule to the current state to get the next state."""
+        next_state = np.zeros_like(current_state)
+        for i in range(1, len(current_state) - 1):
+            neighborhood = current_state[i - 1 : i + 2]
+            rule_index = 7 - int("".join(neighborhood.astype(str)), 2)
+            next_state[i] = self.rule_binary[rule_index]
+        return next_state
+
+    def generate_data(self, num_samples):
+        """Generate data samples based on the specified CA rule."""
+        # Adjust to create an array of shape (num_samples, self.sequence_length-1, 3) for inputs
+        data = np.zeros((num_samples, self.sequence_length - 1, 3))
+        targets = np.zeros((num_samples, 1))
+
+        for i in range(num_samples):
+            # Initialize a random initial state for the sequence
+            state_sequence = np.random.randint(2, size=(self.sequence_length, 3))
+            for j in range(1, self.sequence_length):
+                state_sequence[j] = self._apply_rule(state_sequence[j - 1])
+
+            data[i] = state_sequence[:-1]  # Use all but the last state as features
+            targets[i] = state_sequence[
+                -1, 1
+            ]  # Target is the middle cell of the last state
+
+        return data, targets
+
+    def generate_backward_data(self, num_samples):
+        """Generate data for backward prediction task."""
+        # This is more complex and requires thoughtful implementation
+        # For simplification, this method can be similar to generate_data but with reversed logic
+        raise NotImplementedError("Backward data generation not implemented.")
+
+
+# rule_number = 30  # Example CA rule
+# data_generator = SequenceDataGenerator(rule_number)
+# data, targets = data_generator.generate_data(num_samples=1000)
+
+# print(f"Data shape: {data.shape}") # (num_samples, sequence_length-1, 3)
+# print(f"Targets shape: {targets.shape}") # (num_samples, 1)
+# print(f"Data sample:\n{data[0]}")
+# print(f"Targets sample: {targets[0]}")
