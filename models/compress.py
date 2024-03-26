@@ -17,10 +17,16 @@ class WeightAutoencoder(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(input_size, 1064),
             nn.ReLU(),
-            nn.Linear(1064, 3),  # Encoding the input down to 2 dimensions
+            nn.Linear(1064, 532),
+            nn.ReLU(),
+            nn.Linear(532, 3),
         )
         self.decoder = nn.Sequential(
-            nn.Linear(3, 1064), nn.ReLU(), nn.Linear(1064, input_size)
+            nn.Linear(3, 532),
+            nn.ReLU(),
+            nn.Linear(532, 1064),
+            nn.ReLU(),
+            nn.Linear(1064, input_size),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -63,31 +69,34 @@ def encode_weights(autoencoder, weights):
         return autoencoder.encoder(weights)
 
 
-def train(model: nn.Module, data: torch.Tensor, num_epochs: int = 1000) -> None:
+def train(data: torch.tensor, num_epochs: int, input_size: int) -> WeightAutoencoder:
     """
     Training loop for the autoencoder
 
     Parameters
     ----------
-    model : nn.Module
-        The autoencoder model
     data : torch.Tensor
         The input data
     num_epochs : int
         The number of epochs to train the model
     """
-    input_size = len(data[0])
     autoencoder = WeightAutoencoder(input_size)
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(autoencoder.parameters(), lr=0.01)
+    optimizer = optim.Adam(autoencoder.parameters(), lr=0.001)
 
     # Train the autoencoder
-    for epoch in range(num_epochs):
+    epoch = 0
+    while True:
         optimizer.zero_grad()
-        output = autoencoder(data)
-        loss = criterion(output, data)
+        outputs = autoencoder(data)
+        loss = criterion(outputs, data)
         loss.backward()
         optimizer.step()
+        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}")
 
-        if epoch % 10 == 0:
-            print(f"Epoch {epoch}, Loss: {loss.item()}")
+        epoch += 1
+
+        if loss.item() < 0.01:
+            break
+
+    torch.save(autoencoder.state_dict(), "autoencoder.pth")
