@@ -10,6 +10,9 @@ class SimpleSequentialNetwork(nn.Module):
     -------
     forward(x)
         Forward pass of the network.
+    predict(current_state)
+        Predict the output of the network by passing the current state of a row
+        of CA cells through the network.
     """
 
     def __init__(self) -> None:
@@ -36,7 +39,8 @@ class SimpleSequentialNetwork(nn.Module):
 
     def predict(self, current_state: torch.Tensor) -> list:
         """
-        Predict the output of the network.
+        Predict the output of the network by passing the current state of a
+        row of CA cells through the network.
 
         Parameters
         ----------
@@ -54,10 +58,9 @@ class SimpleSequentialNetwork(nn.Module):
             left = current_state[i - 1] if i > 0 else 0
             center = current_state[i]
             right = current_state[i + 1] if i < len(current_state) - 1 else 0
-            next_state = self.forward(
-                torch.tensor([left, center, right], dtype=torch.float32).view(
-                    1, -1
-                )  # Reshape to add batch dimension
-            )
-            new_state.append(int(round(next_state.item())))
+            state_tensor = torch.tensor(
+                [left, center, right], dtype=torch.float32
+            ).view(1, -1)
+            next_state = self.forward(state_tensor)
+            new_state.append(int(round(next_state.item())))  # Round to 0 or 1
         return new_state
