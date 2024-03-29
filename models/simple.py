@@ -20,7 +20,7 @@ class SimpleSequentialNetwork(nn.Module):
     def __init__(self) -> None:
         super(SimpleSequentialNetwork, self).__init__()
         self.net = nn.Sequential(
-            nn.Linear(3, 10), nn.ReLU(), nn.Linear(10, 1), nn.Sigmoid()
+            nn.Linear(3, 8), nn.ReLU(), nn.Linear(8, 1), nn.Sigmoid()
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -69,7 +69,8 @@ class SimpleSequentialNetwork(nn.Module):
 
     @staticmethod
     def train(
-        data: torch.tensor,
+        X: torch.Tensor,
+        y: torch.Tensor,
         learning_rate: float = 0.001,
         save_as: str = None,
     ) -> Tuple[nn.Module, list]:
@@ -78,8 +79,10 @@ class SimpleSequentialNetwork(nn.Module):
 
         Parameters
         ----------
-        data : torch.tensor
-            The data to train the network on.
+        X : torch.Tensor
+            The input data.
+        y : torch.Tensor
+            The target data.
         input_size : int
             The size of the input.
         learning_rate : float
@@ -102,8 +105,8 @@ class SimpleSequentialNetwork(nn.Module):
 
         while True:
             optimizer.zero_grad()
-            outputs = model(data)
-            loss = criterion(outputs, data)
+            outputs = model(X)
+            loss = criterion(outputs, y)
             loss.backward()
             optimizer.step()
             loss_history.append(loss.item())
