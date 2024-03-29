@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -128,7 +130,7 @@ class VariationalAutoEncoder(nn.Module):
         input_size: int,
         learning_rate: float = 0.001,
         save_as: str = None,
-    ) -> nn.Module:
+    ) -> Tuple[nn.Module, list]:
         """
         Training loop for the variational autoencoder
 
@@ -145,8 +147,8 @@ class VariationalAutoEncoder(nn.Module):
 
         Returns
         -------
-        nn.Module
-            The trained model
+        nn.Module, list
+            The trained model and the loss history
         """
 
         model = VariationalAutoEncoder(input_size)
@@ -159,15 +161,17 @@ class VariationalAutoEncoder(nn.Module):
         data = data.to(device)
 
         epoch = 0
+        loss_history = []
 
         while True:
             optimizer.zero_grad()
             decoded, mu, logvar = model(data)
             loss = model.loss_function(data, decoded, mu, logvar)
             loss.backward()
+            loss_history.append(loss.item())
             optimizer.step()
             print(f"Epoch {epoch}, Loss: {loss.item()}")
-            if loss.item() < 100:
+            if loss.item() < 0.01:
                 break
 
             epoch += 1
@@ -175,4 +179,4 @@ class VariationalAutoEncoder(nn.Module):
         if save_as:
             torch.save(model.state_dict(), f"{save_as}.pt")
 
-        return model, device
+        return model, loss_history

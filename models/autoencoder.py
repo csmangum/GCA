@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -92,7 +94,7 @@ class AutoEncoder(nn.Module):
         input_size: int,
         learning_rate: float = 0.001,
         save_as: str = None,
-    ) -> nn.Module:
+    ) -> Tuple[nn.Module, list]:
         """
         Training loop for the autoencoder
 
@@ -104,6 +106,11 @@ class AutoEncoder(nn.Module):
             The size of the input data
         save_as : str, optional
             The path to save the model to, by default None
+
+        Returns
+        -------
+        nn.Module, list
+            The trained autoencoder model and the loss history
         """
         model = AutoEncoder(input_size)
         criterion = nn.MSELoss()
@@ -116,11 +123,14 @@ class AutoEncoder(nn.Module):
 
         # Train the autoencoder
         epoch = 0
+        loss_history = []
+
         while True:
             optimizer.zero_grad()
             outputs = model(data)
             loss = criterion(outputs, data)
             loss.backward()
+            loss_history.append(loss.item())
             optimizer.step()
             print(f"Epoch {epoch}, Loss: {loss.item()}")
 
@@ -133,4 +143,4 @@ class AutoEncoder(nn.Module):
         if save_as:
             torch.save(model.state_dict(), f"{save_as}.pt")
 
-        return model, device
+        return model, loss_history

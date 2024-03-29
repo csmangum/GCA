@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 
@@ -64,3 +66,55 @@ class SimpleSequentialNetwork(nn.Module):
             next_state = self.forward(state_tensor)
             new_state.append(int(round(next_state.item())))  # Round to 0 or 1
         return new_state
+
+    @staticmethod
+    def train(
+        data: torch.tensor,
+        learning_rate: float = 0.001,
+        save_as: str = None,
+    ) -> Tuple[nn.Module, list]:
+        """
+        Train the network on the given data.
+
+        Parameters
+        ----------
+        data : torch.tensor
+            The data to train the network on.
+        input_size : int
+            The size of the input.
+        learning_rate : float
+            The learning rate to use for training.
+        save_as : str
+            The file to save the trained model to.
+
+        Returns
+        -------
+        nn.Module, list
+            The trained model and the loss history.
+
+        """
+        model = SimpleSequentialNetwork()
+        criterion = nn.BCELoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+        epoch = 0
+        loss_history = []
+
+        while True:
+            optimizer.zero_grad()
+            outputs = model(data)
+            loss = criterion(outputs, data)
+            loss.backward()
+            optimizer.step()
+            loss_history.append(loss.item())
+            print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+            epoch += 1
+
+            if loss.item() < 0.01:
+                break
+
+        if save_as:
+            torch.save(model.state_dict(), f"{save_as}.pt")
+
+        return model, loss_history
