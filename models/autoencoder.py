@@ -76,16 +76,15 @@ class AutoEncoder(nn.Module):
         weights : torch.Tensor
             The weights to encode
         device : torch.device
-            The device to use, either "cuda" or "cpu"
+            The device to use for the encoding
 
         Returns
         -------
         torch.Tensor
             The encoded weights
         """
-        with torch.no_grad():
-            weights = weights.to(device)
-            encoded = self.encoder(weights)
+        weights = weights.to(device)
+        encoded = self.encoder(weights)
         return encoded
 
     @staticmethod
