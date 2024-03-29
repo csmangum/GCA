@@ -86,9 +86,8 @@ class AutoEncoder(nn.Module):
             encoded = self.encoder(weights)
         return encoded
 
-    @classmethod
+    @staticmethod
     def train(
-        cls,
         data: torch.tensor,
         input_size: int,
         learning_rate: float = 0.001,
