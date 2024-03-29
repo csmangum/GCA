@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 from automata import Automata
-from models import AutomataCNN
+from models.simple import SimpleSequentialNetwork
 
 
 def plot_automata(
@@ -69,17 +69,16 @@ def generate_from_model(model: nn.Module, num_generations: int, num_cells: int) 
     List[np.ndarray]
         A list of arrays representing each generation of the cellular automaton.
     """
-    initial_state = [0] * num_cells  # Initialize with all zeros
-    initial_state[num_cells // 2] = 1  # Set the middle cell to 1
-    current_state = torch.tensor(initial_state, dtype=torch.float32).view(1, 1, -1)
-    predictions = [current_state.view(-1).numpy()]
+    initial_state = torch.zeros(1, 1, num_cells)  # Initialize with all zeros
+    initial_state[:, :, num_cells // 2] = 1  # Set the middle cell to 1
+    current_state = initial_state
 
+    predictions = [initial_state.squeeze().numpy()]
     with torch.no_grad():
         for _ in range(num_generations - 1):
             output = model(current_state)
-            current_state = (output > 0.5).float()  # Binarize the output
-            predictions.append(current_state.view(-1).numpy())
-
+            current_state[:, :, :] = (output > 0.5).float()  # Update state
+            predictions.append(output.squeeze().numpy())
     return predictions
 
 
@@ -139,11 +138,38 @@ class Learn:
         self.epochs = epochs
         self.path = path
         self.automata = Automata(rule_number, num_cells)
-        self.model = AutomataCNN()
+        self.model = SimpleSequentialNetwork()
         self.criterion = nn.BCELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         self.epoch = 0
         self.loss = 0
+        
+    def test_generate(self, num_generations, num_cells):
+        """
+        Generate a 1D cellular automaton from a machine learning model.
+        
+        Parameters
+        ----------
+        num_generations : int
+            The number of generations to generate.
+        num_cells : int
+            The number of cells in each row of the cellular automaton.
+        """
+        initial_state = torch.zeros( 1, num_cells)  # Initialize with all zeros
+        initial_state[:, num_cells // 2] = 1  # Set the middle cell to 1
+        current_state = initial_state
+        
+        predictions = [initial_state.squeeze().numpy()]
+        with torch.no_grad():
+            for _ in range(num_generations - 1):
+                output = self.model(current_state[0])
+                current_state = (output > 0.5).float()
+                predictions.append(output.squeeze().numpy())
+        return predictions
+    
+    
+
+        
 
     def generate_data(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -177,16 +203,26 @@ class Learn:
 
             data.append(initial_state)
             labels.append(next_state)
-
+            
+        center_states = [[row[len(row) // 2]] for row in labels]
+        
+        # save data and labels to txt files
+        # np.savetxt(self.path + "data.txt", data)
+        # np.savetxt(self.path + "labels.txt", labels)
+        
+        
+        
         return torch.tensor(data, dtype=torch.float32), torch.tensor(
-            labels, dtype=torch.float32
+            center_states, dtype=torch.float32
         )
 
     def prepare_data(
         self,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ):
         """
         Prepare training and test data for a 1D cellular automaton.
+        
+        Returns process data
 
         Parameters
         ----------
@@ -197,17 +233,17 @@ class Learn:
 
         Returns
         -------
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
-            A tuple containing the training and test data and labels.
+        
         """
         data, labels = self.generate_data()
-        data = data.view(-1, 1, self.num_cells)
-        labels = labels.view(-1, self.num_cells)
-        split = int(0.8 * len(data))
-        train_data, test_data = data[:split], data[split:]
-        train_labels, test_labels = labels[:split], labels[split:]
-
-        return train_data, test_data, train_labels, test_labels
+        print(data.shape, labels.shape)
+        print('----------------')
+        print(data[:5])
+        print('*******************')
+        print(labels[:5])
+        print('----------------')
+        return data, labels
+        
 
     def early_stopping(self, actual_automata: "Automata") -> float:
         """
@@ -290,14 +326,14 @@ class Learn:
         real_automata = self.automata.generate(self.num_generations)
         save_array(real_automata, self.path, "real")
 
-        train_data, _, train_labels, _ = self.prepare_data()
+        data, labels = self.prepare_data()
 
         self.epoch = 0
 
         while True:
             self.optimizer.zero_grad()
-            output = self.model(train_data)
-            loss = self.criterion(output, train_labels)
+            output = self.model(data)
+            loss = self.criterion(output, labels)
             loss.backward()
             self.optimizer.step()
 
@@ -318,4 +354,4 @@ class Learn:
             if self.epoch == self.epochs:
                 break
 
-        self.finalize()
+        # self.finalize()

@@ -1,9 +1,10 @@
-# from animations import evolution, training_evolution
-# from charts import plot_automata, rule_states
+from animations import evolution, training_evolution
+from charts import plot_automata, rule_states
 # from learn import Learn
 from matplotlib import pyplot as plt
 import numpy as np
-from learning.all_rules import Learn
+# from learning.all_rules import Learn
+from learn import Learn
 from settings import *
 from util import make_dir
 
@@ -33,6 +34,9 @@ def main() -> None:
     # evolution(real_automata, RULE_NUMBER)
     # training_evolution(RULE_NUMBER)
     # rule_states(RULE_NUMBER)
+    generated_automata = learn.test_generate(100, 101)
+    print(f"generated_automata: {generated_automata}")
+    plot_automata(RULE_NUMBER, generated_automata, PATH)
     return loss_history
 
 
@@ -93,7 +97,6 @@ def optimize():
         plt.draw()
         plt.pause(0.1)  # Pause to update the plot
 
-        print(f"learning_rate={lr} done")
 
     plt.ioff()  # Turn off interactive mode
     plt.show()  # Show the final plot
@@ -101,4 +104,4 @@ def optimize():
 
 # If running as main, call the optimize function
 if __name__ == "__main__":
-    optimize()
+    main()
