@@ -37,3 +37,17 @@ def plot_automata(
     if show:
         plt.show()
     plt.close()
+
+
+def plot_loss(loss: list, path: str = None, title: str = None, show: bool = True):
+    plt.figure(figsize=(10, 5))
+    plt.plot(loss)
+    if title:
+        plt.title(title, fontsize=20)
+    plt.xlabel("Epoch", fontsize=15)
+    plt.ylabel("Loss", fontsize=15)
+    if path:
+        plt.savefig(path)
+    if show:
+        plt.show()
+    plt.close()
