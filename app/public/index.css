@@ -1,0 +1,11 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif; /* MUI uses Roboto as the default font */
+    background-color: #f0f0f0; /* Light grey background */
+}
+
+/* Add any global styles or resets you might want here */
