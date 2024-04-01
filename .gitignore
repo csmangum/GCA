@@ -162,4 +162,5 @@ results/*
 app/node_modules/*
 history/*
 *.pth
+*.pt
 *.ipynb
