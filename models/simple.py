@@ -121,3 +121,12 @@ class SimpleSequentialNetwork(nn.Module):
             torch.save(model.state_dict(), f"{save_as}.pt")
 
         return model, loss_history
+
+
+class SimpleAllRules(SimpleSequentialNetwork):
+
+    def __init__(self) -> None:
+        super(SimpleAllRules, self).__init__()
+        self.net = nn.Sequential(
+            nn.Linear(11, 8), nn.ReLU(), nn.Linear(8, 1), nn.Sigmoid()
+        )
