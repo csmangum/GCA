@@ -186,7 +186,15 @@ class Automata:
         """
         import matplotlib.pyplot as plt
 
+        height, width = history.shape
+        fig_size = (width * 0.05, height * 0.05)  # These factors can be adjusted
+
+        plt.figure(figsize=fig_size)
         plt.imshow(history, cmap="Greys", interpolation="nearest")
+
+        # Remove axis for better visual appearance
+        # plt.axis('off')
+
         plt.show()
 
 
