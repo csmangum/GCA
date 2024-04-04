@@ -128,5 +128,5 @@ class SimpleAllRules(SimpleSequentialNetwork):
     def __init__(self) -> None:
         super(SimpleAllRules, self).__init__()
         self.net = nn.Sequential(
-            nn.Linear(11, 8), nn.ReLU(), nn.Linear(8, 1), nn.Sigmoid()
+            nn.Linear(11, 11), nn.ReLU(), nn.Linear(11, 1), nn.Sigmoid()
         )
