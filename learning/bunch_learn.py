@@ -14,6 +14,7 @@ def train(
     X: torch.Tensor,
     y: torch.Tensor,
     rule_number: int,
+    verbose: bool = True,
 ) -> tuple:
     """
     Train the model.
@@ -34,6 +35,8 @@ def train(
         The target data.
     rule_number : int
         The rule number to train on.
+    verbose : bool
+        Whether to print the training progress.
 
     Returns
     -------
@@ -70,9 +73,7 @@ def train(
         parameter_snapshots.append(extract_parameters(model))
         loss_records.append(loss.item())
 
-        if epoch % 10 == 0:
-            # parameter_snapshots.append(extract_parameters(model))
-            # loss_records.append(loss.item())
+        if epoch % 10 == 0 and verbose:
             print(f"Epoch {epoch} - Loss: {loss.item()}")
 
         if loss.item() < 0.01:
@@ -81,7 +82,13 @@ def train(
     return parameter_snapshots, loss_records, gradient_norms
 
 
-def bunch_learn(model_count: int, rule_number: int, learning_epochs: int) -> tuple:
+def bunch_learn(
+    model_count: int,
+    rule_number: int,
+    learning_epochs: int,
+    seed: int = None,
+    verbose: bool = True,
+) -> tuple:
     """
     Train a bunch of models on the same rule number.
 
@@ -93,6 +100,10 @@ def bunch_learn(model_count: int, rule_number: int, learning_epochs: int) -> tup
         The rule number to train on.
     learning_epochs : int
         The number of epochs to train each model.
+    seed : int
+        The seed to use for reproducibility.
+    verbose : bool
+        Whether to print the training progress.
 
     Returns
     -------
@@ -114,6 +125,9 @@ def bunch_learn(model_count: int, rule_number: int, learning_epochs: int) -> tup
 
         y = torch.tensor(cell_states, dtype=torch.float32).view(-1, 1)
 
+        if seed:
+            torch.manual_seed(seed)
+
         learning = SimpleSequentialNetwork()
 
         criterion = nn.BCELoss()
@@ -121,7 +135,7 @@ def bunch_learn(model_count: int, rule_number: int, learning_epochs: int) -> tup
         optimizer = optim.Adam(learning.parameters(), lr=0.01)
 
         parameter_snapshots, loss_records, gradient_norms = train(
-            learning_epochs, learning, criterion, optimizer, X, y, i
+            learning_epochs, learning, criterion, optimizer, X, y, i, verbose
         )
 
         total_snapshots.append(parameter_snapshots)
