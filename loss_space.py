@@ -14,6 +14,14 @@ cell_states = execute_rule(rule_number)
 X = torch.tensor([[i >> 2, (i >> 1) & 1, i & 1] for i in range(8)], dtype=torch.float32)
 y = torch.tensor(cell_states, dtype=torch.float32).view(-1, 1)
 
+
+# random seed for reproducibility
+# seed 981 is a dud
+import random
+seed = random.randint(0, 1000)
+print(f"Seed: {seed}")
+torch.manual_seed(seed)
+
 model = SimpleSequentialNetwork()
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.01)
@@ -22,8 +30,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.01)
 weight_history = []
 loss_history = []
 
-# Train the model briefly to find a starting point, record the optimization path
-for epoch in range(500):  # Let's increase the epochs to see a clearer optimization path
+for epoch in range(500):
     optimizer.zero_grad()
     output = model(X)
     loss = criterion(output, y)
@@ -66,7 +73,7 @@ def compute_loss(offset1, offset2):
 
 
 # Create a grid of offsets to compute loss for each combination
-offsets = np.linspace(-1, 1, 20)
+offsets = np.linspace(-1, 1, 50)
 offset1_mesh, offset2_mesh = np.meshgrid(
     offsets, offsets
 )  # Create meshgrid for 3D plotting
