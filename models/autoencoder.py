@@ -36,14 +36,14 @@ class AutoEncoder(nn.Module):
         """
         super(AutoEncoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_size, 1064),
+            nn.Linear(input_size, 2128),
             nn.LeakyReLU(),
-            nn.Linear(1064, 3),
+            nn.Linear(2128, 3),
         )
         self.decoder = nn.Sequential(
-            nn.Linear(3, 1064),
+            nn.Linear(3, 2128),
             nn.LeakyReLU(),
-            nn.Linear(1064, input_size),
+            nn.Linear(2128, input_size),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
