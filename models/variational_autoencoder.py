@@ -39,13 +39,17 @@ class VariationalAutoEncoder(nn.Module):
         """
         super(VariationalAutoEncoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_size, 1064),
-            nn.ReLU(),
+            nn.Linear(input_size, 2128),
+            nn.LeakyReLU(),
+            nn.Linear(2128, 1064),
+            nn.LeakyReLU(),
             nn.Linear(1064, 3),
         )
         self.decoder = nn.Sequential(
-            nn.Linear(3, 1064),
-            nn.ReLU(),
+            nn.Linear(3, 2128),
+            nn.LeakyReLU(),
+            nn.Linear(2128, 1064),
+            nn.LeakyReLU(),
             nn.Linear(1064, input_size),
         )
         self.mu = nn.Linear(3, 3)
@@ -76,7 +80,7 @@ class VariationalAutoEncoder(nn.Module):
         decoded = self.decoder(z)
         return decoded, mu, logvar
 
-    def encode_weights(self, weights: torch.Tensor) -> torch.Tensor:
+    def encode_weights(self, weights: torch.Tensor, device) -> torch.Tensor:
         """
         Encode the weights using the encoder layer into a 3-dimensional tensor
 
@@ -90,6 +94,7 @@ class VariationalAutoEncoder(nn.Module):
         torch.Tensor
             The encoded weights
         """
+        weights = weights.to(device)
         encoded = self.encoder(weights)
         return encoded
 
@@ -99,6 +104,7 @@ class VariationalAutoEncoder(nn.Module):
         decoded: torch.Tensor,
         mu: torch.Tensor,
         logvar: torch.Tensor,
+        beta: float = 1,
     ) -> torch.Tensor:
         """
         Calculate the loss function for the variational autoencoder by summing
@@ -114,6 +120,8 @@ class VariationalAutoEncoder(nn.Module):
             The mean tensor
         logvar : torch.Tensor
             The log variance tensor
+        beta : float, optional
+            The beta value for the Kullback-Leibler divergence, by default 1
 
         Returns
         -------
@@ -122,7 +130,7 @@ class VariationalAutoEncoder(nn.Module):
         """
         BCE = nn.functional.mse_loss(decoded, x, reduction="sum")
         KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-        return BCE + KLD
+        return BCE + beta * KLD
 
     @staticmethod
     def train(
@@ -166,12 +174,12 @@ class VariationalAutoEncoder(nn.Module):
         while True:
             optimizer.zero_grad()
             decoded, mu, logvar = model(data)
-            loss = model.loss_function(data, decoded, mu, logvar)
+            loss = model.loss_function(data, decoded, mu, logvar, beta=.5)
             loss.backward()
             loss_history.append(loss.item())
             optimizer.step()
             print(f"Epoch {epoch}, Loss: {loss.item()}")
-            if loss.item() < 0.01:
+            if loss.item() < 30000:
                 break
 
             epoch += 1
