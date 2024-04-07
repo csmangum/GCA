@@ -27,7 +27,7 @@ def basic_magnitude(matrix: torch.Tensor) -> torch.Tensor:
     - High Magnitudes: Conversely, very large values might suggest that the
         weights are too large, potentially leading to exploding gradients.
     """
-    return torch.norm(matrix)
+    return torch.norm(matrix).item()
 
 
 def spectral_norm(matrix: torch.Tensor) -> torch.Tensor:
@@ -64,7 +64,7 @@ def spectral_norm(matrix: torch.Tensor) -> torch.Tensor:
     """
     U, S, V = torch.svd(matrix)
 
-    return S.max()
+    return S.max().item()
 
 
 def condition_number(matrix: torch.Tensor) -> torch.Tensor:
@@ -106,7 +106,7 @@ def condition_number(matrix: torch.Tensor) -> torch.Tensor:
     """
     U, S, V = torch.svd(matrix)
 
-    return S.max() / S.min()
+    return (S.max() / S.min()).item()
 
 
 def eigenvalue_calculation(matrix: torch.Tensor) -> torch.Tensor:
