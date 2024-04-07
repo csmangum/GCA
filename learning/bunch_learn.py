@@ -88,7 +88,7 @@ def bunch_learn(
     learning_epochs: int,
     seed: int = None,
     verbose: bool = True,
-) -> tuple:
+) -> dict:
     """
     Train a bunch of models on the same rule number.
 
@@ -107,9 +107,12 @@ def bunch_learn(
 
     Returns
     -------
-    tuple
-        A tuple containing the parameter snapshots, loss records, and gradient norms.
+    dict
+        A dictionary containing the training results. Including the parameter
+        snapshots, loss records, and gradient norms.
     """
+
+    training_results = {}
 
     total_snapshots = []
     total_loss_records = []
@@ -142,4 +145,8 @@ def bunch_learn(
         total_loss_records.append(loss_records)
         total_gradient_norms.append(gradient_norms)
 
-    return learning, total_snapshots, total_loss_records, total_gradient_norms
+    training_results["snapshots"] = total_snapshots
+    training_results["losses"] = total_loss_records
+    training_results["gradients"] = total_gradient_norms
+
+    return training_results
