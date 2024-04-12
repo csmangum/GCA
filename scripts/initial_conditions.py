@@ -16,9 +16,13 @@ import pandas as pd
 
 from learning.bunch_learn import bunch_learn
 
-learning, total_snapshots, total_loss_records, total_gradient_norms = bunch_learn(
+results = bunch_learn(
     model_count=10, rule_number=30, learning_epochs=1000, verbose=False
 )
+
+total_snapshots = results["snapshots"]
+total_loss_records = results["losses"]
+total_gradient_norms = results["gradients"]
 
 
 def main():
