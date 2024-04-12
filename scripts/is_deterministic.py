@@ -16,11 +16,20 @@ import torch
 from learning.bunch_learn import bunch_learn
 
 # Set seed for reproducibility
-seed = 123
+seed = 1234
+model_count = 20
 
-learning, total_snapshots, total_loss_records, total_gradient_norms = bunch_learn(
-    model_count=2, rule_number=30, learning_epochs=2000, seed=seed, verbose=False
+results = bunch_learn(
+    model_count=model_count,
+    rule_number=30,
+    learning_epochs=2000,
+    seed=seed,
+    verbose=False,
 )
+
+total_snapshots = results["snapshots"]
+total_loss_records = results["losses"]
+total_gradient_norms = results["gradients"]
 
 
 def main():
@@ -49,3 +58,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+    from charts.gradient import gradient_w_loss
+
+    first_layer_gradients = [gradient[0] for gradient in total_gradient_norms[10]]
+
+    gradient_w_loss(
+        first_layer_gradients,
+        total_loss_records[10],
+        title="Layer Gradients and Loss: N=5000",
+    )
