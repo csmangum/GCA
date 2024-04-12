@@ -167,3 +167,29 @@ def plot_3d_scatter(encoded_weights: np.ndarray, loss_history: np.ndarray) -> No
 
     # Show the plot
     fig.show()
+
+
+def histogram_w_median(data: list, title: str = None) -> None:
+    """
+    Plot a histogram with the median value as a vertical line.
+
+    Parameters
+    ----------
+    data : list
+        The data to plot.
+    title : str
+        The title of the plot. Default is None.
+    """
+    plt.figure(figsize=(10, 5))
+    plt.hist(data, alpha=0.75, bins=50, edgecolor="black", linewidth=1.2)
+
+    # Median vertical line
+    median_value = np.median(data)
+    plt.axvline(median_value, color="red", linestyle="dashed", linewidth=1.2)
+
+    plt.xlabel("Convergence Epochs")
+    plt.ylabel("Model Count")
+    if title:
+        plt.title(title)
+    plt.legend(["Median"])
+    plt.show()
