@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def gradient_w_loss(gradient: list, loss: list, rolling_mean: int = None) -> None:
+def gradient_w_loss(
+    gradient: list, loss: list, rolling_mean: int = None, title: str = None
+) -> None:
     """
     Plot the layer gradients and loss.
 
@@ -35,6 +37,10 @@ def gradient_w_loss(gradient: list, loss: list, rolling_mean: int = None) -> Non
         rolling_mean_calc = pd.Series(gradient).rolling(window=rolling_mean).mean()
         ax1.plot(rolling_mean_calc, color="tab:green")
 
-    plt.title("Layer Gradients and Loss")
+    if title:
+        plt.title(title)
+    else:
+        plt.title("Layer Gradients and Loss")
+
     fig.tight_layout()
     plt.show()
