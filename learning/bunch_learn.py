@@ -86,7 +86,6 @@ def bunch_learn(
     model_count: int,
     rule_number: int,
     learning_epochs: int,
-    seed: int = None,
     verbose: bool = True,
 ) -> dict:
     """
@@ -100,8 +99,6 @@ def bunch_learn(
         The rule number to train on.
     learning_epochs : int
         The number of epochs to train each model.
-    seed : int
-        The seed to use for reproducibility.
     verbose : bool
         Whether to print the training progress.
 
@@ -109,16 +106,15 @@ def bunch_learn(
     -------
     dict
         A dictionary containing the training results. Including the parameter
-        snapshots, loss records, and gradient norms.
+        snapshots, loss records, and gradient norms. Indexed by the seed.
     """
 
     training_results = {}
 
-    total_snapshots = []
-    total_loss_records = []
-    total_gradient_norms = []
-
     for i in range(model_count):
+
+        # Random seed
+        seed = torch.randint(0, 1000000, (1,)).item()
 
         cell_states = execute_rule(rule_number)
 
@@ -128,8 +124,7 @@ def bunch_learn(
 
         y = torch.tensor(cell_states, dtype=torch.float32).view(-1, 1)
 
-        if seed:
-            torch.manual_seed(seed)
+        torch.manual_seed(seed)
 
         learning = SimpleSequentialNetwork()
 
@@ -141,12 +136,9 @@ def bunch_learn(
             learning_epochs, learning, criterion, optimizer, X, y, i, verbose
         )
 
-        total_snapshots.append(parameter_snapshots)
-        total_loss_records.append(loss_records)
-        total_gradient_norms.append(gradient_norms)
-
-    training_results["snapshots"] = total_snapshots
-    training_results["losses"] = total_loss_records
-    training_results["gradients"] = total_gradient_norms
+        training_results[seed] = {}
+        training_results[seed]["snapshots"] = parameter_snapshots
+        training_results[seed]["losses"] = loss_records
+        training_results[seed]["gradients"] = gradient_norms
 
     return training_results
