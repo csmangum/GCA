@@ -97,6 +97,48 @@ def create_dataframe(results: dict) -> pd.DataFrame:
     df["l1_magnitude_change"] = df["l1_final_magnitude"] - df["l1_initial_magnitude"]
     df["l1_magnitude_change_epoch"] = df["l1_magnitude_change"] / df["epoch_count"]
 
+    # dot product initial and final weights
+    df["l1_dot_product"] = [
+        torch.dot(torch.tensor(initial).view(-1), torch.tensor(final).view(-1)).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
+    # cosine similarity initial and final weights
+    df["l1_cosine_similarity"] = [
+        torch.nn.functional.cosine_similarity(
+            torch.tensor(initial).view(-1), torch.tensor(final).view(-1), dim=0
+        ).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
+    # euclidean distance initial and final weights
+    df["l1_euclidean_distance"] = [
+        torch.dist(torch.tensor(initial).view(-1), torch.tensor(final).view(-1)).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
+    # Manhattan distance initial and final weights
+    df["l1_manhattan_distance"] = [
+        torch.dist(
+            torch.tensor(initial).view(-1), torch.tensor(final).view(-1), p=1
+        ).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
+    # Correlation between initial and final weights
+    df["l1_correlation"] = [
+        torch.nn.functional.cosine_similarity(
+            torch.tensor(initial).view(-1), torch.tensor(final).view(-1), dim=0
+        ).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
+    # Covariance between initial and final weights
+    df["l1_covariance"] = [
+        torch.dot(torch.tensor(initial).view(-1), torch.tensor(final).view(-1)).item()
+        for initial, final in zip(initial_weights, final_weights)
+    ]
+
     df["initial_spectral_norm"] = [
         magnitude.spectral_norm(
             torch.tensor(weights).unsqueeze(0)
