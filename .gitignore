@@ -164,3 +164,4 @@ history/*
 *.pth
 *.pt
 *.ipynb
+*.npy
