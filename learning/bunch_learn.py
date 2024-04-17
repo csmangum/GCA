@@ -15,6 +15,7 @@ def train(
     y: torch.Tensor,
     rule_number: int,
     verbose: bool = True,
+    early_stopping: bool = True,
 ) -> tuple:
     """
     Train the model.
@@ -37,6 +38,8 @@ def train(
         The rule number to train on.
     verbose : bool
         Whether to print the training progress.
+    early_stopping : bool
+        Whether to stop training when the loss is below 0.01.
 
     Returns
     -------
@@ -76,7 +79,7 @@ def train(
         if epoch % 10 == 0 and verbose:
             print(f"Epoch {epoch} - Loss: {loss.item()}")
 
-        if loss.item() < 0.01:
+        if loss.item() < 0.01 and early_stopping:
             break
 
     return parameter_snapshots, loss_records, gradient_norms
@@ -85,8 +88,11 @@ def train(
 def bunch_learn(
     model_count: int,
     rule_number: int,
-    learning_epochs: int,
+    max_epochs: int,
     verbose: bool = True,
+    seed: int = None,
+    learning_rate: float = 0.01,
+    early_stopping: bool = True,
 ) -> dict:
     """
     Train a bunch of models on the same rule number.
@@ -97,10 +103,17 @@ def bunch_learn(
         The number of models to train.
     rule_number : int
         The rule number to train on.
-    learning_epochs : int
-        The number of epochs to train each model.
+    max_epochs : int
+        The max number of epochs to train each model, otherwise, the training
+        stops when the loss is below 0.01.
     verbose : bool
         Whether to print the training progress.
+    seed : int
+        The random seed to use.
+    learning_rate : float
+        The learning rate to use.
+    early_stopping : bool
+        Whether to stop training when the loss is below 0.01.
 
     Returns
     -------
@@ -114,7 +127,11 @@ def bunch_learn(
     for i in range(model_count):
 
         # Random seed
-        seed = torch.randint(0, 1000000, (1,)).item()
+        if seed is not None:
+            torch.manual_seed(seed)
+        else:
+            seed = torch.randint(0, 1000000, (1,)).item()
+            torch.manual_seed(seed)
 
         cell_states = execute_rule(rule_number)
 
@@ -124,21 +141,24 @@ def bunch_learn(
 
         y = torch.tensor(cell_states, dtype=torch.float32).view(-1, 1)
 
-        torch.manual_seed(seed)
-
         learning = SimpleSequentialNetwork()
 
-        criterion = nn.BCELoss()
+        criterion = nn.BCELoss()  # Binary Cross Entropy Loss
 
-        optimizer = optim.Adam(learning.parameters(), lr=0.01)
+        optimizer = optim.Adam(learning.parameters(), lr=learning_rate)
 
         parameter_snapshots, loss_records, gradient_norms = train(
-            learning_epochs, learning, criterion, optimizer, X, y, i, verbose
+            max_epochs, learning, criterion, optimizer, X, y, i, verbose, early_stopping
         )
 
-        training_results[seed] = {}
-        training_results[seed]["snapshots"] = parameter_snapshots
-        training_results[seed]["losses"] = loss_records
-        training_results[seed]["gradients"] = gradient_norms
+        results = {
+            "snapshots": parameter_snapshots,
+            "losses": loss_records,
+            "gradients": gradient_norms,
+            "learning_rate": learning_rate,
+            "rule_number": rule_number,
+            "model_number": i,
+        }
+        training_results[seed] = results
 
     return training_results
