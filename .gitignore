@@ -165,3 +165,4 @@ history/*
 *.pt
 *.ipynb
 *.npy
+*.gif
