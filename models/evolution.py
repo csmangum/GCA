@@ -182,7 +182,12 @@ class ArtificialEvolution:
                 param.data += self.scale * torch.randn_like(param)
 
     def run(
-        self, cycles: int, X: torch.Tensor, y: torch.Tensor, history: bool = True
+        self,
+        max_cycles: int,
+        X: torch.Tensor,
+        y: torch.Tensor,
+        history: bool = True,
+        early_stopping: bool = False,
     ) -> tuple:
         """
         Run the evolutionary training process.
@@ -194,14 +199,16 @@ class ArtificialEvolution:
 
         Parameters
         ----------
-        cycles : int
-            Number of training cycles.
+        max_cycles : int
+            Max number of training cycles.
         X : torch.Tensor
             Input data of shape (batch_size, num_features).
         y : torch.Tensor
             Target labels of shape (batch_size, 1).
         history : bool, optional
             Whether to store the population history, by default True.
+        early_stopping : bool, optional
+            Whether to stop early if the best fitness is above -0.02, by default False.
 
         Returns
         -------
@@ -209,9 +216,9 @@ class ArtificialEvolution:
             Final population of neural networks and the best fit network.
         """
 
-        for cycle in range(cycles):
+        for cycle in range(max_cycles):
             if history:
-                self.population_history.append(self.population)
+                self.population_history.append(self.population.copy())
             fitnesses = [
                 self.evaluate_fitness(net, self.criterion, X, y)
                 for net in self.population
@@ -232,8 +239,13 @@ class ArtificialEvolution:
             print(
                 f"Cycle {cycle}: Average fitness: {np.mean(fitnesses):.2f} Best: {max(fitnesses):.2f} Worst: {min(fitnesses):.2f}"
             )
+
+            if max(fitnesses) > -0.02 and early_stopping:
+                print(f"Early stopping at cycle {cycle}")
+                break
+
         if history:
-            self.population_history.append(self.population)
+            self.population_history.append(self.population.copy())
 
         return self.population, self.best(X, y)
 
