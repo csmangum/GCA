@@ -3,6 +3,8 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
+from util import model_hash
+
 
 class SimpleSequentialNetwork(nn.Module):
     """
@@ -22,6 +24,7 @@ class SimpleSequentialNetwork(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(3, 8), nn.ReLU(), nn.Linear(8, 1), nn.Sigmoid()
         )
+        self.id = model_hash(self)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
