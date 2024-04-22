@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 import shutil
@@ -8,6 +9,26 @@ import torch
 import torch.nn as nn
 
 from automata import Automata
+
+
+def model_hash(model: nn.Module) -> str:
+    """
+    Generate a hash of the model parameters.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The model to hash.
+
+    Returns
+    -------
+    str
+        The hash of the model parameters.
+    """
+    hash_md5 = hashlib.md5()
+    extracted_parameters = extract_parameters(model)
+    hash_md5.update(extracted_parameters.tobytes())
+    return hash_md5.hexdigest()
 
 
 def extract_number(filename: str) -> int:
