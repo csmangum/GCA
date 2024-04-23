@@ -250,6 +250,21 @@ class ArtificialEvolution:
         return self.population, self.best(X, y)
 
     def best(self, X: torch.Tensor, y: torch.Tensor) -> nn.Module:
+        """
+        Return the best network from the population.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            Input data of shape (batch_size, num_features).
+        y : torch.Tensor
+            Target labels of shape (batch_size, 1).
+
+        Returns
+        -------
+        nn.Module
+            Best network from the population based on fitness
+        """
         return max(
             self.population,
             key=lambda x: self.evaluate_fitness(x, self.criterion, X, y),
