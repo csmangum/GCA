@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -38,6 +40,8 @@ class ArtificialEvolution:
         Scale of the mutation.
     population_history : list
         List of populations at each cycle.
+    fitness_history : list
+        List of fitness values at each cycle. Tuple of (min, max, avg).
 
     Methods
     -------
@@ -55,6 +59,8 @@ class ArtificialEvolution:
         Run the evolutionary training process.
     best(X: torch.Tensor, y: torch.Tensor) -> nn.Module:
         Return the best network from the population.
+    log_fitness(fitness: list) -> Tuple[float, float, float]:
+        Calculates the Minimum, Maximum and Average fitness values for each generation.
     """
 
     def __init__(
@@ -73,6 +79,7 @@ class ArtificialEvolution:
         self.mutation_rate = mutation_rate
         self.scale = scale
         self.population_history = []
+        self.fitness_history = []
 
     def initialize_population(self, size: int) -> list:
         """
@@ -223,6 +230,7 @@ class ArtificialEvolution:
                 self.evaluate_fitness(net, self.criterion, X, y)
                 for net in self.population
             ]
+            self.fitness_history.append(self.log_fitness(fitnesses))
             parents = self.select_parents(self.population, fitnesses, self.parents)
 
             next_generation = []
@@ -269,3 +277,19 @@ class ArtificialEvolution:
             self.population,
             key=lambda x: self.evaluate_fitness(x, self.criterion, X, y),
         )
+
+    def log_fitness(self, fitness: list) -> Tuple[float, float, float]:
+        """
+        Stores the Minimum, Maximum and Average fitness values for each generation.
+
+        Parameters
+        ----------
+        fitness : list
+            List of fitness values for each network in the population.
+
+        Returns
+        -------
+        Tuple[float, float, float]
+            Minimum, Maximum and Average fitness values.
+        """
+        return min(fitness), max(fitness), np.mean(fitness)
