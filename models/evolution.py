@@ -4,6 +4,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from models.crossover import AverageCrossover, CrossoverStrategy
+from models.mutation import GaussianMutation, MutationStrategy
+
 
 class ArtificialEvolution:
     """
@@ -17,12 +20,10 @@ class ArtificialEvolution:
         Number of networks in the population.
     parents : int
         Number of parents to select from the population.
-    mutation_rate : float, optional
-        Probability of mutating a weight, by default 0.1.
-    scale : float, optional
-        Scale of the mutation, by default 0.05.
     crossover_strategy : CrossoverStrategy, optional
         Crossover strategy to use, by default AverageCrossover.
+    mutation_strategy : MutationStrategy, optional
+        Mutation strategy to use, by default GaussianMutation.
 
     Attributes
     ----------
@@ -36,16 +37,14 @@ class ArtificialEvolution:
         List of neural networks in the population.
     parents : int
         Number of parents to select from the population.
-    mutation_rate : float
-        Probability of mutating a weight.
-    scale : float
-        Scale of the mutation.
     population_history : list
         List of populations at each cycle.
     fitness_history : list
         List of fitness values at each cycle. Tuple of (min, max, avg).
     crossover_strategy : CrossoverStrategy
         Crossover strategy to use.
+    mutation_strategy : MutationStrategy
+        Mutation strategy to use.
 
     Methods
     -------
@@ -72,20 +71,18 @@ class ArtificialEvolution:
         model: nn.Module,
         population: int,
         parents: int,
-        mutation_rate: float = 0.1,
-        scale: float = 0.05,
         crossover_strategy: CrossoverStrategy = AverageCrossover(),
+        mutation_strategy: MutationStrategy = GaussianMutation(),
     ) -> None:
         self.model = model
         self.criterion = nn.BCELoss()
         self.population_size = population
         self.population = self.initialize_population(population)
         self.parents = parents
-        self.mutation_rate = mutation_rate
-        self.scale = scale
         self.population_history = []
         self.fitness_history = []
         self.crossover_strategy = crossover_strategy
+        self.mutation_strategy = mutation_strategy
 
     def initialize_population(self, size: int) -> list:
         """
@@ -185,9 +182,7 @@ class ArtificialEvolution:
         network : nn.Module
             Neural network to mutate.
         """
-        for param in network.parameters():
-            if torch.rand(1) < self.mutation_rate:
-                param.data += self.scale * torch.randn_like(param)
+        self.mutation_strategy.mutate(network)
 
     def run(
         self,
