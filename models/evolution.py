@@ -1,8 +1,82 @@
+from abc import ABC, abstractmethod
 from typing import Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
+
+
+class CrossoverStrategy(ABC):
+    @abstractmethod
+    def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
+        raise NotImplementedError(
+            "Crossover strategy must implement the crossover method."
+        )
+
+
+class AverageCrossover(CrossoverStrategy):
+    """
+    Crossover strategy that averages the weights of two parent networks.
+    """
+
+    def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
+        child = type(parent1)()
+        for child_param, param1, param2 in zip(
+            child.parameters(), parent1.parameters(), parent2.parameters()
+        ):
+            child_param.data.copy_((param1.data + param2.data) / 2.0)
+        return child
+
+
+class RandomCrossover(CrossoverStrategy):
+    """
+    Crossover strategy that randomly selects weights from two parent networks.
+    """
+
+    def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
+        child = type(parent1)()
+        for child_param, param1, param2 in zip(
+            child.parameters(), parent1.parameters(), parent2.parameters()
+        ):
+            mask = torch.rand(param1.size()) > 0.5
+            child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+        return child
+
+
+class RandomPointCrossover(CrossoverStrategy):
+    """
+    Crossover strategy that randomly selects a point and swaps weights from two
+    parent networks.
+    """
+
+    def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
+        child = type(parent1)()
+        for child_param, param1, param2 in zip(
+            child.parameters(), parent1.parameters(), parent2.parameters()
+        ):
+            mask = torch.zeros(param1.size())
+            mask[:, : param1.size(1) // 2] = 1
+            child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+        return child
+
+
+class RandomRangeCrossover(CrossoverStrategy):
+    """
+    Crossover strategy that randomly selects a range and swaps weights from two
+    parent networks.
+    """
+
+    def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
+        child = type(parent1)()
+        for child_param, param1, param2 in zip(
+            child.parameters(), parent1.parameters(), parent2.parameters()
+        ):
+            mask = torch.zeros(param1.size())
+            start = torch.randint(0, param1.size(1), (1,))
+            end = torch.randint(start, param1.size(1), (1,))
+            mask[:, start:end] = 1
+            child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+        return child
 
 
 class ArtificialEvolution:
@@ -21,6 +95,8 @@ class ArtificialEvolution:
         Probability of mutating a weight, by default 0.1.
     scale : float, optional
         Scale of the mutation, by default 0.05.
+    crossover_strategy : CrossoverStrategy, optional
+        Crossover strategy to use, by default AverageCrossover.
 
     Attributes
     ----------
@@ -42,6 +118,8 @@ class ArtificialEvolution:
         List of populations at each cycle.
     fitness_history : list
         List of fitness values at each cycle. Tuple of (min, max, avg).
+    crossover_strategy : CrossoverStrategy
+        Crossover strategy to use.
 
     Methods
     -------
@@ -70,6 +148,7 @@ class ArtificialEvolution:
         parents: int,
         mutation_rate: float = 0.1,
         scale: float = 0.05,
+        crossover_strategy: CrossoverStrategy = AverageCrossover(),
     ) -> None:
         self.model = model
         self.criterion = nn.BCELoss()
@@ -80,6 +159,7 @@ class ArtificialEvolution:
         self.scale = scale
         self.population_history = []
         self.fitness_history = []
+        self.crossover_strategy = crossover_strategy
 
     def initialize_population(self, size: int) -> list:
         """
@@ -154,7 +234,7 @@ class ArtificialEvolution:
 
     def crossover(self, parent1: nn.Module, parent2: nn.Module) -> nn.Module:
         """
-        Create a child network by averaging the weights of two parent networks.
+        Create a child network by the crossover of two parent networks.
 
         Parameters
         ----------
@@ -166,14 +246,9 @@ class ArtificialEvolution:
         Returns
         -------
         nn.Module
-            Child network with averaged weights.
+            Child network created by crossover of the parents.
         """
-        child = self.model()
-        for child_param, param1, param2 in zip(
-            child.parameters(), parent1.parameters(), parent2.parameters()
-        ):
-            child_param.data.copy_((param1.data + param2.data) / 2.0)
-        return child
+        return self.crossover_strategy.crossover(parent1, parent2)
 
     def mutate(self, network: nn.Module) -> None:
         """
