@@ -52,9 +52,23 @@ class RandomPointCrossover(CrossoverStrategy):
         for child_param, param1, param2 in zip(
             child.parameters(), parent1.parameters(), parent2.parameters()
         ):
-            mask = torch.zeros(param1.size())
-            mask[:, : param1.size(1) // 2] = 1
-            child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+            if (
+                param1.dim() > 1
+            ):  # Check if the parameter tensor has more than one dimension
+                mask = torch.zeros(
+                    param1.size(), dtype=torch.bool
+                )  # Initialize mask as a boolean tensor
+                split_point = torch.randint(
+                    0, param1.size(1), (1,)
+                ).item()  # Randomly select a split point
+                mask[:, :split_point] = True  # Set the first part of the mask to True
+                child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+            else:
+                # For 1-dimensional tensors, copy the entire tensor from one of the parents randomly
+                if torch.rand(1) < 0.5:
+                    child_param.data.copy_(param1.data)
+                else:
+                    child_param.data.copy_(param2.data)
         return child
 
 
@@ -69,9 +83,15 @@ class RandomRangeCrossover(CrossoverStrategy):
         for child_param, param1, param2 in zip(
             child.parameters(), parent1.parameters(), parent2.parameters()
         ):
-            mask = torch.zeros(param1.size())
-            start = torch.randint(0, param1.size(1), (1,))
-            end = torch.randint(start, param1.size(1), (1,))
-            mask[:, start:end] = 1
-            child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+            if param1.dim() > 1:
+                mask = torch.zeros(param1.size(), dtype=torch.bool)
+                start = torch.randint(0, param1.size(1), (1,)).item()
+                end = torch.randint(start, param1.size(1), (1,)).item()
+                mask[:, start:end] = True
+                child_param.data.copy_(torch.where(mask, param1.data, param2.data))
+            else:
+                if torch.rand(1) < 0.5:
+                    child_param.data.copy_(param1.data)
+                else:
+                    child_param.data.copy_(param2.data)
         return child
