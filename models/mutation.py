@@ -19,11 +19,11 @@ class UniformMutation(MutationStrategy):
     a predefined range. This is a straightforward and widely used mutation strategy.
     """
 
-    def __init__(self, mutation_rate: float = 0.1, scale: float = 0.05):
+    def __init__(self, mutation_rate: float = 0.1, scale: float = 0.05) -> None:
         self.mutation_rate = mutation_rate
         self.scale = scale
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate:
                 noise = torch.rand_like(param) * self.scale
@@ -39,11 +39,11 @@ class GaussianMutation(MutationStrategy):
     facilitating both fine and coarse tuning of the neural network.
     """
 
-    def __init__(self, mutation_rate: float = 0.1, scale: float = 0.05):
+    def __init__(self, mutation_rate: float = 0.1, scale: float = 0.05) -> None:
         self.mutation_rate = mutation_rate
         self.scale = scale
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate:
                 noise = torch.randn_like(param) * self.scale
@@ -60,12 +60,17 @@ class NonUniformMutation(MutationStrategy):
     smaller changes.
     """
 
-    def __init__(self, mutation_rate: float, scale: float, max_generations: int):
+    def __init__(
+        self,
+        mutation_rate: float = 0.1,
+        scale: float = 0.05,
+        max_generations: int = 100,
+    ) -> None:
         self.mutation_rate = mutation_rate
         self.scale = scale
         self.max_generations = max_generations
 
-    def mutate(self, network: nn.Module, generation: int):
+    def mutate(self, network: nn.Module, generation: int) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate * (
                 1 - generation / self.max_generations
@@ -82,12 +87,14 @@ class PolynomialMutation(MutationStrategy):
     It uses a polynomial probability distribution to decide the magnitude of mutation.
     """
 
-    def __init__(self, mutation_rate: float, scale: float, eta: float):
+    def __init__(
+        self, mutation_rate: float = 0.1, scale: float = 0.05, eta: float = 20
+    ) -> None:
         self.mutation_rate = mutation_rate
         self.scale = scale
         self.eta = eta
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate:
                 noise = torch.randn_like(param) * self.scale
@@ -103,10 +110,10 @@ class BitFlipMutation(MutationStrategy):
     Each bit has a probability of being flipped (changed from 0 to 1, or vice versa).
     """
 
-    def __init__(self, mutation_rate: float):
+    def __init__(self, mutation_rate: float = 0.1) -> None:
         self.mutation_rate = mutation_rate
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate:
                 mask = torch.randint(0, 2, param.size(), device=param.device)
@@ -124,12 +131,17 @@ class BoundaryMutation(MutationStrategy):
     lie near the edges of the parameter range.
     """
 
-    def __init__(self, mutation_rate: float, lower_bound: float, upper_bound: float):
+    def __init__(
+        self,
+        mutation_rate: float = 0.1,
+        lower_bound: float = -1.0,
+        upper_bound: float = 1.0,
+    ) -> None:
         self.mutation_rate = mutation_rate
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate:
                 mask = torch.rand_like(param) < 0.5
@@ -151,22 +163,26 @@ class AdaptiveGaussianMutation(MutationStrategy):
     """
 
     def __init__(
-        self, initial_rate: float, min_rate: float, max_rate: float, scale: float
-    ):
+        self,
+        initial_rate: float = 0.1,
+        min_rate: float = 0.01,
+        max_rate: float = 0.5,
+        scale: float = 0.05,
+    ) -> None:
         self.rate = initial_rate
         self.min_rate = min_rate
         self.max_rate = max_rate
         self.scale = scale
         self.performance_tracker = []
 
-    def update_rate(self, current_performance):
+    def update_rate(self, current_performance) -> None:
         if current_performance > min(self.performance_tracker):
             self.rate = max(self.min_rate, self.rate * 0.9)
         else:
             self.rate = min(self.max_rate, self.rate * 1.1)
         self.performance_tracker.append(current_performance)
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.rate:
                 noise = torch.randn_like(param) * self.scale
@@ -183,17 +199,17 @@ class HybridMutation(MutationStrategy):
 
     def __init__(
         self,
-        rate_gaussian: float,
-        scale_gaussian: float,
-        rate_uniform: float,
-        range_uniform: Tuple[float, float],
-    ):
+        rate_gaussian: float = 0.1,
+        scale_gaussian: float = 0.05,
+        rate_uniform: float = 0.1,
+        range_uniform: Tuple[float, float] = (-0.1, 0.1),
+    ) -> None:
         self.rate_gaussian = rate_gaussian
         self.scale_gaussian = scale_gaussian
         self.rate_uniform = rate_uniform
         self.range_uniform = range_uniform
 
-    def mutate(self, network: nn.Module):
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.rate_gaussian:
                 param.data += self.scale_gaussian * torch.randn_like(param)
