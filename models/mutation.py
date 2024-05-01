@@ -58,25 +58,30 @@ class NonUniformMutation(MutationStrategy):
     Initially, it allows for significant changes to the weights to explore a
     broader search space, and later it fine-tunes the solutions by making
     smaller changes.
+
+    #! Not working
     """
 
     def __init__(
         self,
         mutation_rate: float = 0.1,
         scale: float = 0.05,
-        max_generations: int = 100,
+        max_generations: int = 1000,
     ) -> None:
         self.mutation_rate = mutation_rate
         self.scale = scale
         self.max_generations = max_generations
+        self.generation = 0
 
-    def mutate(self, network: nn.Module, generation: int) -> None:
+    def mutate(self, network: nn.Module) -> None:
         for param in network.parameters():
             if torch.rand(1) < self.mutation_rate * (
-                1 - generation / self.max_generations
+                1 - self.generation / self.max_generations
             ):
                 noise = torch.randn_like(param) * self.scale
                 param.data += noise
+
+        self.generation += 1
 
 
 class PolynomialMutation(MutationStrategy):
