@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+#! Need to update to add embedding layer, etc
+
 
 class SimpleTransformer(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int) -> None:
@@ -38,4 +40,5 @@ class SimpleTransformer(nn.Module):
         """
         x = self.transformer(x)
         x = self.fc(x)
+        x = torch.sigmoid(x)
         return x

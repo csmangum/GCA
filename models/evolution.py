@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 import torch
@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from models.crossover import AverageCrossover, CrossoverStrategy
 from models.mutation import GaussianMutation, MutationStrategy
+from models import ModelFactory
 
 
 class ArtificialEvolution:
@@ -16,6 +17,10 @@ class ArtificialEvolution:
     ----------
     model : nn.Module
         Neural network model to evolve.
+    factory : ModelFactory
+        Factory class for creating models on the fly.
+    settings : dict
+        Settings to pass to the model factory.
     population : int
         Number of networks in the population.
     parents : int
@@ -27,6 +32,8 @@ class ArtificialEvolution:
 
     Attributes
     ----------
+    model_factory : ModelFactory
+        Factory class for creating models on the fly.
     model : nn.Module
         Neural network model to evolve.
     criterion : nn.Module
@@ -69,12 +76,13 @@ class ArtificialEvolution:
     def __init__(
         self,
         model: nn.Module,
+        settings: dict,
         population: int,
         parents: int,
         crossover_strategy: CrossoverStrategy = AverageCrossover(),
         mutation_strategy: MutationStrategy = GaussianMutation(),
     ) -> None:
-        self.model = model
+        self.model_factory = ModelFactory(model, settings)
         self.criterion = nn.BCELoss()
         self.population_size = population
         self.population = self.initialize_population(population)
@@ -98,7 +106,7 @@ class ArtificialEvolution:
         list
             List of SimpleSequentialNetwork instances.
         """
-        return [self.model() for _ in range(size)]
+        return [self.model_factory() for _ in range(size)]
 
     def evaluate_fitness(
         self,

@@ -5,6 +5,8 @@ import torch.nn as nn
 
 from util import model_hash
 
+#! Need a network base class to inherit from
+
 
 class SimpleSequentialNetwork(nn.Module):
     """
