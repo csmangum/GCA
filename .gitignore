@@ -166,3 +166,4 @@ history/*
 *.ipynb
 *.npy
 *.gif
+*.json
