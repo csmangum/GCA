@@ -1,0 +1,7 @@
+python-dotenv==0.20.0
+os==0.0.1
+json==2.0.9
+datetime==4.3
+requests==2.28.1
+google-cloud-firestore==2.3.4
+firebase-admin==6.0.0
