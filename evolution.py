@@ -212,7 +212,7 @@ def run_evolution(
     tuple
         Tuple of the final population and the loss function used.
     """
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
     population = initialize_population(population_size)
 
     for cycle in range(cycles):
@@ -231,7 +231,7 @@ def run_evolution(
                     if len(next_generation) >= population_size:
                         break
         population = next_generation
-
+        print(f"Cycle {cycle}: Best fitness: {max(fitnesses)}")
         # Optionally: Print average fitness of the population
         print(
             "Cycle {}: Average fitness: {:.2f}".format(
