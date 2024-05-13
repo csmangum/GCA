@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+from models.factory import ModelFactory
 
-from models.crossover import AverageCrossover, CrossoverStrategy
-from models.mutation import GaussianMutation, MutationStrategy
-from models import ModelFactory
+# if TYPE_CHECKING:
+#     from models.crossover import CrossoverStrategy
+#     from models.mutation import MutationStrategy
 
 
 class ArtificialEvolution:
@@ -79,11 +80,11 @@ class ArtificialEvolution:
         settings: dict,
         population: int,
         parents: int,
-        crossover_strategy: CrossoverStrategy = AverageCrossover(),
-        mutation_strategy: MutationStrategy = GaussianMutation(),
+        crossover_strategy,
+        mutation_strategy,
     ) -> None:
         self.model_factory = ModelFactory(model, settings)
-        self.criterion = nn.BCELoss()
+        self.criterion = nn.MSELoss()
         self.population_size = population
         self.population = self.initialize_population(population)
         self.parents = parents
@@ -137,6 +138,7 @@ class ArtificialEvolution:
 
         with torch.no_grad():
             outputs = network(inputs)
+            targets = targets.unsqueeze(1)
             loss = criterion(outputs, targets)
         return -loss.item()  # Using negative loss as fitness, lower loss is better
 
@@ -198,7 +200,7 @@ class ArtificialEvolution:
         X: torch.Tensor,
         y: torch.Tensor,
         history: bool = True,
-        early_stopping: bool = False,
+        early_stopping: float = None,
     ) -> tuple:
         """
         Run the evolutionary training process.
@@ -218,8 +220,8 @@ class ArtificialEvolution:
             Target labels of shape (batch_size, 1).
         history : bool, optional
             Whether to store the population history, by default True.
-        early_stopping : bool, optional
-            Whether to stop early if the best fitness is above -0.02, by default False.
+        early_stopping : float, optional
+            Stop training if the best fitness exceeds this value, by default None.
 
         Returns
         -------
@@ -251,8 +253,7 @@ class ArtificialEvolution:
             print(
                 f"Cycle {cycle}: Average fitness: {np.mean(fitnesses):.2f} Best: {max(fitnesses):.2f} Worst: {min(fitnesses):.2f}"
             )
-
-            if max(fitnesses) > -0.02 and early_stopping:
+            if early_stopping and max(fitnesses) >= -early_stopping:
                 print(f"Early stopping at cycle {cycle}")
                 break
 
