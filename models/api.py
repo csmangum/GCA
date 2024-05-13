@@ -63,7 +63,7 @@ load_dotenv()
 COIN_MARKET_API_KEY = os.getenv("COIN_MARKET_API")
 
 
-def fetch_and_store_crypto_data(request):
+def fetch_and_store_crypto_data():
     """
     Fetches cryptocurrency data from CoinMarketCap and stores it in Google Firestore.
     Triggered by HTTP request.
@@ -97,4 +97,4 @@ def fetch_and_store_crypto_data(request):
 
 
 if __name__ == "__main__":
-    fetch_and_store_crypto_data("request")
+    fetch_and_store_crypto_data()
