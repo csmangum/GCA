@@ -298,3 +298,32 @@ class ArtificialEvolution:
             Minimum, Maximum and Average fitness values.
         """
         return min(fitness), max(fitness), np.mean(fitness)
+
+
+class ArtificialEvolutionV2(ArtificialEvolution):
+    def evaluate_fitness(
+        self, outputs: torch.Tensor, actual: torch.Tensor
+    ) -> float:
+        loss = self.criterion(outputs, actual)
+        return -loss.item()  # Using negative loss as fitness, lower loss is better
+    
+    def best(self, X: torch.Tensor, y: torch.Tensor) -> nn.Module:
+        """
+        Return the best network from the population.
+
+        Parameters
+        ----------
+        X : torch.Tensor
+            Input data of shape (batch_size, num_features).
+        y : torch.Tensor
+            Target labels of shape (batch_size, 1).
+
+        Returns
+        -------
+        nn.Module
+            Best network from the population based on fitness
+        """
+        return max(
+            self.population,
+            key=lambda x: self.evaluate_fitness(x(X), y),
+        )
