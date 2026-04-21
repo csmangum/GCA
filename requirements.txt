@@ -1,4 +1,4 @@
-python-dotenv==0.20.0
+python-dotenv==1.2.2
 os==0.0.1
 json==2.0.9
 datetime==4.3
